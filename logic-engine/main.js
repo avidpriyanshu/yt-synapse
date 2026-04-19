@@ -162,10 +162,6 @@ function escapeYamlString(s) {
   return `"${t}"`;
 }
 
-function sanitizeFilename(str) {
-  return ReviewAgent.sanitizeFilename((str || '').replace(/\s+/g, ' ')).trim();
-}
-
 function buildVideoMarkdown({
   title,
   source,
@@ -184,9 +180,8 @@ function buildVideoMarkdown({
   const topicsYaml =
     yamlTopics.length > 0 ? `\n${yamlTopics.join('\n')}` : ' []';
 
-  // Channel as wikilink for Obsidian to render as a clickable link
-  const channelFile = sanitizeFilename(channelTitle);
-  const channelWikilink = `[[channels/${channelFile}]]`;
+  // Channel as direct wikilink (Obsidian will handle it)
+  const channelWikilink = `[[${channelTitle}]]`;
 
   return `---
 title: ${escapeYamlString(title)}
@@ -216,33 +211,6 @@ ${topicLinksLine || '_No extracted topics_'}
 
 }
 
-function buildChannelMarkdown(channelTitle, channelId) {
-  const youtubeUrl = `https://www.youtube.com/channel/${channelId}`;
-
-  return `---
-title: "${escapeYamlString(channelTitle)}"
-channel_id: ${channelId}
-type: channel
-tags:
-  - youtube/channel
----
-
-# ${channelTitle}
-
-[Watch on YouTube →](${youtubeUrl})
-
-## Videos
-
-\`\`\`dataview
-TABLE title, source as "Watch", date as "Published"
-FROM "videos"
-WHERE channel = this.file.link
-SORT date DESC
-\`\`\`
-
-`;
-}
-
 function buildTopicMarkdown(topicLabel) {
   const safe = topicLabel.replace(/"/g, '\\"');
   return `# ${topicLabel}
@@ -259,21 +227,6 @@ SORT date DESC
 `;
 
 }
-
-function ensureChannelPage(channelTitle, channelId, channelsDir) {
-  const filename = sanitizeFilename(channelTitle);
-  const channelPath = path.join(channelsDir, `${filename}.md`);
-
-  if (ReviewAgent.checkFileExists(channelPath)) {
-    logPhase('channel', 'exists', filename);
-    return;
-  }
-
-  const md = buildChannelMarkdown(channelTitle, channelId);
-  fs.writeFileSync(channelPath, md, 'utf8');
-  logPhase('channel', 'created', filename);
-}
-
 async function processClipping(absPath) {
   const vault = getVaultRoot();
   const phase = 'pipeline';
@@ -363,11 +316,6 @@ async function processClipping(absPath) {
 
   let videosAdded = 0;
   let topicsCreated = 0;
-
-  // Ensure channel page exists
-  const channelsDir = path.join(vault, 'channels');
-  fs.mkdirSync(channelsDir, { recursive: true });
-  ensureChannelPage(feedTitle, channelId, channelsDir);
 
   for (const it of fresh) {
     const topics = processor.extractCandidateTopics(it.title);
