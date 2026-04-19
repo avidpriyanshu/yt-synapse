@@ -1,0 +1,21 @@
+{
+  "name": "yt-content-intelligence",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Obsidian vault YouTube intelligence pipeline",
+  "main": "main.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node main.js",
+    "health": "node scripts/health-check.js",
+    "self-test": "node reviewer.js --self-test"
+  },
+  "dependencies": {
+    "chokidar": "^4.0.3",
+    "compromise": "^14.14.4",
+    "gray-matter": "^4.0.3",
+    "rss-parser": "^3.13.0"
+  }
+}
