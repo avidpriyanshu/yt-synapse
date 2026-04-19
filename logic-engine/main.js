@@ -180,13 +180,13 @@ function buildVideoMarkdown({
   const topicsYaml =
     yamlTopics.length > 0 ? `\n${yamlTopics.join('\n')}` : ' []';
 
-  // Channel as direct wikilink (Obsidian will handle it)
+  // Channel name (plain text for YAML) + wikilink in body
   const channelWikilink = `[[${channelTitle}]]`;
 
   return `---
 title: ${escapeYamlString(title)}
 source: ${escapeYamlString(source)}
-channel: ${channelWikilink}
+channel: ${escapeYamlString(channelTitle)}
 channel_id: ${channelId}
 video_id: ${videoId}
 topics:${topicsYaml}
