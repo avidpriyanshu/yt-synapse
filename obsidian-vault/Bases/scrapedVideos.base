@@ -9,8 +9,11 @@ views:
       - channel
       - date
       - topics
+      - file.ctime
     sort:
+      - property: file.ctime
+        direction: DESC
       - property: date
-        direction: ASC
+        direction: DESC
       - property: channel
         direction: ASC

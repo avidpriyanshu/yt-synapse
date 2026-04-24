@@ -15,123 +15,7 @@ YouTube Vault is a system that automatically collects videos from your favorite 
 
 ---
 
-## Step 1: What Are Your Channel Interests?
-
-Which types of channels interest you most? You can add more channels anytime.
-
-Select as many as you like:
-
-```dataviewjs
-dv.container.innerHTML = `
-<div style="padding: 1em; background-color: var(--background-secondary); border-radius: 0.5em; margin-bottom: 1em;">
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1em;">
-    <label style="display: flex; align-items: center; cursor: pointer;">
-      <input type="checkbox" value="Technology" style="margin-right: 0.5em; width: 1.2em; height: 1.2em; cursor: pointer;">
-      <span>🖥️ Technology</span>
-    </label>
-    <label style="display: flex; align-items: center; cursor: pointer;">
-      <input type="checkbox" value="Education" style="margin-right: 0.5em; width: 1.2em; height: 1.2em; cursor: pointer;">
-      <span>📚 Education</span>
-    </label>
-    <label style="display: flex; align-items: center; cursor: pointer;">
-      <input type="checkbox" value="Science" style="margin-right: 0.5em; width: 1.2em; height: 1.2em; cursor: pointer;">
-      <span>🔬 Science</span>
-    </label>
-    <label style="display: flex; align-items: center; cursor: pointer;">
-      <input type="checkbox" value="Business" style="margin-right: 0.5em; width: 1.2em; height: 1.2em; cursor: pointer;">
-      <span>💼 Business</span>
-    </label>
-    <label style="display: flex; align-items: center; cursor: pointer;">
-      <input type="checkbox" value="Creative" style="margin-right: 0.5em; width: 1.2em; height: 1.2em; cursor: pointer;">
-      <span>🎨 Creative</span>
-    </label>
-    <label style="display: flex; align-items: center; cursor: pointer;">
-      <input type="checkbox" value="Entertainment" style="margin-right: 0.5em; width: 1.2em; height: 1.2em; cursor: pointer;">
-      <span>🎬 Entertainment</span>
-    </label>
-    <label style="display: flex; align-items: center; cursor: pointer;">
-      <input type="checkbox" value="Health" style="margin-right: 0.5em; width: 1.2em; height: 1.2em; cursor: pointer;">
-      <span>💚 Health</span>
-    </label>
-    <label style="display: flex; align-items: center; cursor: pointer;">
-      <input type="checkbox" value="Sports" style="margin-right: 0.5em; width: 1.2em; height: 1.2em; cursor: pointer;">
-      <span>⚽ Sports</span>
-    </label>
-  </div>
-</div>
-`;
-
-const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-checkboxes.forEach(cb => {
-  cb.addEventListener('change', () => {
-    const selected = Array.from(checkboxes).filter(c => c.checked).map(c => c.value);
-    localStorage.setItem('yt-vault-setup-interests', JSON.stringify(selected));
-  });
-});
-
-// Load saved interests if any
-try {
-  const saved = JSON.parse(localStorage.getItem('yt-vault-setup-interests') || '[]');
-  saved.forEach(interest => {
-    const cb = Array.from(checkboxes).find(c => c.value === interest);
-    if (cb) cb.checked = true;
-  });
-} catch (e) {}
-```
-
----
-
-## Step 2: How Much Detail Do You Want to See?
-
-When the scraper runs, how much information should it show you?
-
-```dataviewjs
-(async () => {
-  dv.container.innerHTML = `
-  <div style="padding: 1em; background-color: var(--background-secondary); border-radius: 0.5em; margin-bottom: 1em;">
-    <div style="margin-bottom: 1.5em;">
-      <label style="display: flex; align-items: flex-start; margin-bottom: 1em; cursor: pointer;">
-        <input type="radio" name="log-preference" value="INFO" style="margin-right: 0.5em; margin-top: 0.15em; cursor: pointer;">
-        <div>
-          <strong>Summary</strong> (Recommended)
-          <p style="font-size: 0.9em; color: var(--text-muted); margin: 0.25em 0 0 0;">
-            Shows overall progress — how many videos were added, if any errors happened, that's it.
-          </p>
-        </div>
-      </label>
-      <label style="display: flex; align-items: flex-start; cursor: pointer;">
-        <input type="radio" name="log-preference" value="VERBOSE" style="margin-right: 0.5em; margin-top: 0.15em; cursor: pointer;">
-        <div>
-          <strong>Detailed</strong>
-          <p style="font-size: 0.9em; color: var(--text-muted); margin: 0.25em 0 0 0;">
-            Shows every action — each video added, topics extracted, channels processed. Useful for understanding what's happening.
-          </p>
-        </div>
-      </label>
-    </div>
-  </div>
-  `;
-
-  const logRadios = document.querySelectorAll('input[name="log-preference"]');
-  
-  try {
-    const res = await fetch('http://localhost:3000/config');
-    if (res.ok) {
-      const config = await res.json();
-      const level = config.loggingLevel || 'INFO';
-      const radio = Array.from(logRadios).find(r => r.value === level);
-      if (radio) radio.checked = true;
-    }
-  } catch (e) {
-    const summaryRadio = Array.from(logRadios).find(r => r.value === 'INFO');
-    if (summaryRadio) summaryRadio.checked = true;
-  }
-})();
-```
-
----
-
-## Step 3: Should the Scraper Start Automatically?
+## Should the Scraper Start Automatically?
 
 Would you like the scraper to automatically start checking for new videos when you open your vault?
 
@@ -250,10 +134,10 @@ Your YouTube Vault is now configured and ready to use.
 
 ### Next Steps
 
-1. **Click "Complete Setup"** above to apply your preferences
-2. **Go to Service Controls** — See controls for starting and stopping your scraper
+1. **Done!** Your vault is ready
+2. **Check Quick-Start** — Go to Quick-Start page if you need a manual button to start scraping
 3. **Watch videos appear** — Your vault will automatically populate with video notes, topics, and channel pages
-4. **Adjust settings anytime** — Come back to the Settings page to change your preferences
+4. **Adjust settings anytime** — Use Settings page to toggle auto-start
 
 ### Where to Find Everything
 
