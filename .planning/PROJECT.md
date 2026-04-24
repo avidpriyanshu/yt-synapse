@@ -13,18 +13,21 @@ A Node.js-powered pipeline that:
 
 **Current version:** v1.0 (YouTube Synapse)
 
-## Current Milestone: v2.0 YouTube Vault Redesign
+## Current Status: v2.0 Complete ✅
 
-**Goal:** Enhanced templates, improved dashboard, NLP quality, service mode, and accessibility for non-technical users.
+**v2.0 YouTube Vault Redesign** — Shipped 2026-04-24
 
-**Target features:**
-- Enhanced clipping templates with thumbnail extraction and transcript sections
-- Improved Obsidian dashboard using Bases for search and discovery
-- Per-channel pages auto-generated with video lists and categorization
-- Channel tag/category system for organization
-- Fix topic extraction quality (replace stale compromise NLP with better library)
-- Scraper service mode with UI toggle for non-technical users
-- Comprehensive logging for successful and failed scrapes
+**Delivered:**
+- Enhanced clipping templates with thumbnail extraction and transcript sections ✅
+- Improved Obsidian dashboard using Bases for search and discovery ✅
+- Per-channel pages auto-generated with video lists and categorization ✅
+- Channel tag/category system for organization ✅
+- Topic extraction quality improved (regex-based, configurable blacklist) ✅
+- Scraper service mode with UI toggle for non-technical users ✅
+- Comprehensive logging for successful and failed scrapes ✅
+- Settings UI and first-run wizard for non-technical users ✅
+
+**Next Milestone:** v2.1 (see roadmap backlog)
 
 ## Evolution
 
