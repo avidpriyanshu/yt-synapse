@@ -9,6 +9,8 @@
   },
   "scripts": {
     "start": "node main.js",
+    "server": "node server.js",
+    "launcher": "node service-launcher.js --detach",
     "health": "node scripts/health-check.js",
     "self-test": "node reviewer.js --self-test"
   },

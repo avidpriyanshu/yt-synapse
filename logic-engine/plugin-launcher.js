@@ -3,7 +3,8 @@
  *
  * This module is loaded by Obsidian plugin hooks to handle auto-start
  * of the scraper on vault open. It reads the config and makes a non-blocking
- * HTTP request to the service backend.
+ * HTTP request to the service backend. It will also ensure the service
+ * backend (server.js) is started if it's not already running.
  */
 
 'use strict';
@@ -11,12 +12,14 @@
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
+const { execFile } = require('child_process');
 const logger = require('./logger.js');
 
 class YouTubeVaultAutoStartPlugin {
   constructor() {
     this.configPath = path.join(__dirname, 'config.json');
     this.autoStartEnabled = false;
+    this.serviceStarted = false;
     this.loadConfig();
   }
 
@@ -34,16 +37,89 @@ class YouTubeVaultAutoStartPlugin {
   }
 
   /**
+   * Check if service is already running
+   */
+  isServiceRunning() {
+    return new Promise((resolve) => {
+      const options = {
+        hostname: 'localhost',
+        port: 3000,
+        path: '/health',
+        method: 'GET',
+        timeout: 500,
+      };
+
+      const req = http.request(options, (res) => {
+        resolve(res.statusCode === 200);
+        res.on('data', () => {});
+        res.on('end', () => {});
+      });
+
+      req.on('error', () => {
+        resolve(false);
+      });
+
+      req.setTimeout(500);
+      req.end();
+    });
+  }
+
+  /**
+   * Ensure service backend is running
+   */
+  ensureService() {
+    if (this.serviceStarted) {
+      return Promise.resolve();
+    }
+
+    return this.isServiceRunning().then((running) => {
+      if (running) {
+        logger.log('INFO', 'SERVICE', 'Service already running', 'no action needed');
+        this.serviceStarted = true;
+        return;
+      }
+
+      // Service not running — try to start it
+      logger.log('INFO', 'SERVICE', 'Service not running', 'attempting to start');
+      return this.startServiceBackend();
+    });
+  }
+
+  /**
+   * Start service backend using service-launcher.js
+   */
+  startServiceBackend() {
+    return new Promise((resolve) => {
+      const launcherPath = path.join(__dirname, 'service-launcher.js');
+
+      execFile('node', [launcherPath, '--detach'], (error, stdout, stderr) => {
+        if (error) {
+          logger.log('WARN', 'SERVICE', 'Failed to start service', error.message);
+          resolve(); // Don't fail — just warn
+          return;
+        }
+
+        logger.log('INFO', 'SERVICE', 'Service started successfully', 'via launcher');
+        this.serviceStarted = true;
+        resolve();
+      });
+    });
+  }
+
+  /**
    * Called when vault opens. Start scraper if auto-start enabled.
    * Non-blocking: uses HTTP request to backend server.
    */
   onVaultOpen() {
-    if (!this.autoStartEnabled) {
-      return;
-    }
+    // First ensure the service is running
+    this.ensureService().then(() => {
+      if (!this.autoStartEnabled) {
+        return;
+      }
 
-    logger.log('INFO', 'SERVICE', 'Auto-start triggered', 'vault open');
-    this.startScraperRemote();
+      logger.log('INFO', 'SERVICE', 'Auto-start triggered', 'vault open');
+      this.startScraperRemote();
+    });
   }
 
   /**
@@ -100,4 +176,8 @@ if (require.main === module) {
   const plugin = new YouTubeVaultAutoStartPlugin();
   console.log('Auto-start plugin loaded');
   console.log('Auto-start enabled:', plugin.autoStartEnabled);
+  console.log('Testing service availability...');
+  plugin.ensureService().then(() => {
+    console.log('Service check complete');
+  });
 }
