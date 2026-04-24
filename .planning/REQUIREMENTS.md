@@ -8,10 +8,10 @@
 - [x] **TMPL-03**: User can view enhanced video metadata (duration, view count, publish date)
 
 ### Dashboard & Discovery (DASH)
-- [ ] **DASH-01**: User can search and filter videos via Obsidian Bases search
-- [ ] **DASH-02**: User can view all videos in a sortable table with columns (title, channel, date, topics)
-- [ ] **DASH-03**: User can browse videos by topic via auto-generated topic pages
-- [ ] **DASH-04**: User can discover videos by creator via auto-generated channel pages
+- [x] **DASH-01**: User can search and filter videos via Obsidian Bases search
+- [x] **DASH-02**: User can view all videos in a sortable table with columns (title, channel, date, topics)
+- [x] **DASH-03**: User can browse videos by topic via auto-generated topic pages
+- [x] **DASH-04**: User can discover videos by creator via auto-generated channel pages
 
 ### Channel Management (CHAN)
 - [ ] **CHAN-01**: System auto-generates one page per unique YouTube channel
