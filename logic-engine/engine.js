@@ -70,12 +70,63 @@ async function resolveChannelIdFromVideo(videoId) {
   }
 }
 
+/**
+ * Extract duration from YouTube watch page HTML.
+ * @param {string} html - YouTube watch page HTML content
+ * @returns {number|null} Duration in seconds, or null if not found
+ */
+function extractDurationFromHtml(html) {
+  if (!html || typeof html !== 'string') return null;
+
+  const match = html.match(/"lengthSeconds":"(\d+)"/);
+  if (match && match[1]) {
+    const seconds = parseInt(match[1], 10);
+    return !isNaN(seconds) && seconds >= 0 ? seconds : null;
+  }
+  return null;
+}
+
+/**
+ * Extract view count from YouTube watch page HTML.
+ * @param {string} html - YouTube watch page HTML content
+ * @returns {number|null} View count, or null if not found
+ */
+function extractViewCountFromHtml(html) {
+  if (!html || typeof html !== 'string') return null;
+
+  const match = html.match(/"viewCount":"(\d+)"/);
+  if (match && match[1]) {
+    const count = parseInt(match[1], 10);
+    return !isNaN(count) && count >= 0 ? count : null;
+  }
+  return null;
+}
+
+/**
+ * Fetch and extract metadata (duration, view count) from a YouTube video.
+ * @param {string} videoId - YouTube video ID
+ * @returns {Promise<{duration: number|null, viewCount: number|null}>} Metadata object
+ */
+async function fetchVideoMetadata(videoId) {
+  try {
+    const html = await fetchWatchPageHtml(videoId);
+    return {
+      duration: extractDurationFromHtml(html),
+      viewCount: extractViewCountFromHtml(html),
+    };
+  } catch {
+    // Graceful degradation: return nulls on any error
+    return { duration: null, viewCount: null };
+  }
+}
+
 function rssUrlForChannel(channelId) {
   return `${YT_HOST}/feeds/videos.xml?channel_id=${encodeURIComponent(channelId)}`;
 }
 
 /**
  * Fetch RSS for channel; returns items with title, link, videoId, pubDate.
+ * Enriches each item with duration and viewCount via fetchVideoMetadata.
  */
 async function fetchChannelFeedVideoItems(channelId) {
   const url = rssUrlForChannel(channelId);
@@ -103,12 +154,27 @@ async function fetchChannelFeedVideoItems(channelId) {
       entry.link ||
       (videoId ? `${YT_HOST}/watch?v=${videoId}` : '');
 
-    items.push({
+    const item = {
       title,
       link,
       videoId,
       pubDate: entry.pubDate || entry.isoDate || '',
-    });
+      duration: null,
+      viewCount: null,
+    };
+
+    // Enrich with duration and viewCount if we have a videoId
+    if (videoId) {
+      try {
+        const metadata = await fetchVideoMetadata(videoId);
+        item.duration = metadata.duration;
+        item.viewCount = metadata.viewCount;
+      } catch {
+        // Graceful degradation: keep nulls on error
+      }
+    }
+
+    items.push(item);
   }
 
   return { feedTitle, items };
@@ -120,5 +186,8 @@ module.exports = {
   fetchWatchPageHtml,
   rssUrlForChannel,
   fetchChannelFeedVideoItems,
+  extractDurationFromHtml,
+  extractViewCountFromHtml,
+  fetchVideoMetadata,
   BROWSER_UA,
 };
