@@ -1,0 +1,5 @@
+{
+  "_comment": "Manual topic deduplication/merging map. Format: 'old topic': 'new topic'",
+  "_example": "\"Jet Engine\": \"Jet Engines\"",
+  "_instructions": "Add entries here to normalize duplicate topics. This mapping is applied during topic extraction and merge operations."
+}
