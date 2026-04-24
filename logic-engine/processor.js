@@ -92,6 +92,14 @@ function remapTopic(topic) {
   return topicRemap[key] || topic;
 }
 
+/**
+ * Check if a phrase contains blacklisted words
+ */
+function isPhraseTainted(phrase) {
+  const words = phrase.toLowerCase().split(/\s+/);
+  return words.some(word => topicBlacklist.has(word));
+}
+
 function extractCandidateTopics(title) {
   if (!title || typeof title !== 'string') return [];
 
@@ -104,14 +112,13 @@ function extractCandidateTopics(title) {
   // Extract capitalized multi-word phrases (2-3 words): "Machine Learning", "Web Development"
   // Prioritize longer phrases first to avoid individual word extraction
   const capPhrases = t.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2}\b/g) || [];
-  const usedRanges = new Set(); // Track which words we've already extracted
 
   for (const phrase of capPhrases) {
     let clean = stripPunctuation(phrase.trim());
     const low = clean.toLowerCase();
-    if (!topicBlacklist.has(low)) {
+    // Skip if phrase contains any blacklisted words
+    if (!isPhraseTainted(clean) && !topicBlacklist.has(low)) {
       seen.set(low, clean);
-      usedRanges.add(low); // Mark these words as used
     }
   }
 
@@ -142,7 +149,7 @@ function extractCandidateTopics(title) {
 
   // Apply remapping for deduplication and collect final topics
   seen.forEach((v) => {
-    if (isPlausibleLabel(v)) {
+    if (isPlausibleLabel(v) && !isPhraseTainted(v)) {
       const remapped = remapTopic(v);
       // Avoid duplicates after remapping
       if (!found.includes(remapped)) {
