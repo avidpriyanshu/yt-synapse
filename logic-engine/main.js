@@ -82,6 +82,57 @@ function upsertChannelRecord(channelId, meta) {
   writeJsonAtomic(CHANNELS_PATH, data);
 }
 
+/**
+ * Auto-generate channel page if it doesn't exist.
+ * Called after upserting channel record to channels.json.
+ */
+function generateChannelPageIfNeeded(channelId, channelTitle) {
+  if (!channelId || !channelTitle) return;
+
+  const vault = getVaultRoot();
+  const channelsDir = path.join(vault, 'channels');
+
+  // Sanitize filename
+  const slug = ReviewAgent.sanitizeFilename(channelTitle.replace(/\s+/g, ' '));
+  const filename = `${slug || 'channel'}.md`;
+  const filepath = path.join(channelsDir, filename);
+
+  // Only create if doesn't exist
+  if (fs.existsSync(filepath)) {
+    return; // Already exists, don't overwrite
+  }
+
+  // Create channels directory if needed
+  fs.mkdirSync(channelsDir, { recursive: true });
+
+  // Generate channel page content
+  const escapedTitle = channelTitle.replace(/"/g, '\\"');
+  const channelPageContent = `---
+title: "${escapedTitle}"
+channel_id: ${channelId}
+type: channel
+tags: []
+---
+
+# ${channelTitle}
+
+[Watch on YouTube →](https://www.youtube.com/channel/${channelId})
+
+## Videos
+
+\`\`\`dataview
+TABLE title, date as "Published", topics
+FROM "videos"
+WHERE channel_id = "${channelId}" OR channel = [[${channelTitle}]]
+SORT date DESC
+\`\`\`
+
+`;
+
+  fs.writeFileSync(filepath, channelPageContent, 'utf8');
+  logPhase('generator', 'channel-page', `created ${filename}`);
+}
+
 /** First youtube URL in markdown body */
 function extractYoutubeUrlFromBody(content) {
   const re =
@@ -319,6 +370,9 @@ async function processClipping(absPath) {
   }
 
   upsertChannelRecord(channelId, { feedTitle });
+
+  // Auto-generate channel page for new channels
+  generateChannelPageIfNeeded(channelId, feedTitle);
 
   logPhase('harvester', 'rss', `${items.length} entries for ${feedTitle}`);
 
