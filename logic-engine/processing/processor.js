@@ -127,6 +127,55 @@ function remapTopic(topic) {
 }
 
 /**
+ * Score topic quality (LOW/MED/HIGH) based on heuristics
+ */
+function scoreTopicQuality(topic) {
+  const blacklist = getBlacklist();
+  const flags = [];
+
+  if (!topic || typeof topic !== 'string') {
+    return { score: 'LOW', flags: ['invalid'] };
+  }
+
+  const clean = topic.trim();
+  const lower = clean.toLowerCase();
+
+  // Check length
+  if (clean.length < 4) {
+    flags.push('too-short');
+  }
+
+  // Check if blacklisted
+  if (blacklist.has(lower)) {
+    flags.push('blacklisted');
+  }
+
+  // Check if only action verbs (bad topic pattern)
+  const actionVerbs = ['build', 'create', 'make', 'learn', 'explains', 'explained', 'using', 'building', 'deploying'];
+  const words = clean.toLowerCase().split(/\s+/);
+  const allActionVerbs = words.length > 0 && words.every(w => actionVerbs.includes(w));
+  if (allActionVerbs) {
+    flags.push('action-verbs-only');
+  }
+
+  // Check if only stop words
+  const allStopWords = words.length > 0 && words.every(w => STOP_LABELS.has(w));
+  if (allStopWords) {
+    flags.push('stop-words-only');
+  }
+
+  // Determine quality level
+  let score = 'HIGH';
+  if (flags.length > 0) {
+    score = clean.length >= 4 && !blacklist.has(lower) && !allActionVerbs && !allStopWords ? 'MED' : 'LOW';
+  } else if (clean.length < 7) {
+    score = 'MED';
+  }
+
+  return { score, flags };
+}
+
+/**
  * Check if a phrase contains blacklisted words
  */
 function isPhraseTainted(phrase, blacklist) {
@@ -212,5 +261,6 @@ module.exports = {
   topicsToWikiLinks,
   remapTopic,
   getBlacklist,
+  scoreTopicQuality,
   topicRemap,
 };

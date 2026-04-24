@@ -5,6 +5,7 @@ const { execFile } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const logger = require('./utils/logger.js');
+const { scoreTopicQuality } = require('./processing/processor.js');
 
 const CONFIG_PATH = path.join(__dirname, 'config', 'config.json');
 const BLACKLIST_PATH = path.join(__dirname, '..', '.planning', 'topic-blacklist.json');
@@ -177,6 +178,62 @@ function removeBlacklistWord(word) {
 }
 
 /**
+ * Get topics from the last 24 hours with quality scores
+ */
+function getRecentTopics() {
+  const logsDir = path.join(__dirname, '..', '.planning', 'logs');
+  const topicMap = new Map(); // topic -> { created, count, quality }
+
+  try {
+    const files = fs.readdirSync(logsDir).filter(f => f.startsWith('run-'));
+    const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
+
+    for (const file of files) {
+      const filePath = path.join(logsDir, file);
+      const stat = fs.statSync(filePath);
+      if (stat.mtimeMs < twentyFourHoursAgo) continue;
+
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const lines = content.split('\n');
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const entry = JSON.parse(line);
+          if (entry.topics && Array.isArray(entry.topics)) {
+            for (const topic of entry.topics) {
+              if (!topicMap.has(topic)) {
+                const { score } = scoreTopicQuality(topic);
+                topicMap.set(topic, {
+                  created: new Date().toISOString(),
+                  videoCount: 1,
+                  qualityScore: score,
+                });
+              } else {
+                const existing = topicMap.get(topic);
+                existing.videoCount += 1;
+              }
+            }
+          }
+        } catch {
+          // Skip malformed lines
+        }
+      }
+    }
+
+    const topics = Array.from(topicMap.entries()).map(([name, data]) => ({
+      name,
+      ...data,
+    }));
+
+    return { ok: true, topics: topics.sort((a, b) => b.videoCount - a.videoCount) };
+  } catch (err) {
+    logger.log('ERROR', 'TOPICS', 'Failed to read recent topics', err.message);
+    return { ok: false, topics: [], error: err.message };
+  }
+}
+
+/**
  * Parse JSON body from request
  */
 function parseJsonBody(req) {
@@ -250,6 +307,10 @@ async function handleRequest(req, res) {
   } else if (pathname === '/blacklist/remove' && req.method === 'POST') {
     const body = await parseJsonBody(req);
     const result = removeBlacklistWord(body.word);
+    res.writeHead(result.ok ? 200 : 400);
+    res.end(JSON.stringify(result));
+  } else if (pathname === '/topics/recent' && req.method === 'GET') {
+    const result = getRecentTopics();
     res.writeHead(result.ok ? 200 : 400);
     res.end(JSON.stringify(result));
   } else if (pathname === '/health' && req.method === 'GET') {
