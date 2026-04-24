@@ -71,19 +71,11 @@ cd yt-vault
 ```
 
 2. In Obsidian: **File → Open folder as vault** → Select the `yt-vault` folder
-3. Skip to **Step 4** (Web Clipper setup)
+3. Continue to **Step 3** below
 
 #### Option B: Use an Existing Vault
 
-1. In your existing Obsidian vault, create this folder structure:
-
-```
-your-vault/
-├── clippings/        ← (Create this empty folder)
-├── videos/           ← (Will be auto-created)
-├── topics/           ← (Will be auto-created)
-└── channels/         ← (Will be auto-created)
-```
+The service will automatically create the required folders when it starts, so no manual setup needed for existing vaults—just proceed to **Step 3** below.
 
 ### Step 3: Install the Obsidian Web Clipper Extension
 
