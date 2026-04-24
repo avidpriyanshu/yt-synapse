@@ -12,7 +12,13 @@
     "server": "node server.js",
     "launcher": "node service-launcher.js --detach",
     "health": "node scripts/health-check.js",
-    "self-test": "node reviewer.js --self-test"
+    "self-test": "node reviewer.js --self-test",
+    "pm2-start": "pm2 start ecosystem.config.js",
+    "pm2-stop": "pm2 stop yt-vault-service",
+    "pm2-restart": "pm2 restart yt-vault-service",
+    "pm2-logs": "pm2 logs yt-vault-service",
+    "pm2-monit": "pm2 monit",
+    "pm2-setup-autoboot": "bash setup-pm2-autoboot.sh"
   },
   "dependencies": {
     "chokidar": "^4.0.3",
