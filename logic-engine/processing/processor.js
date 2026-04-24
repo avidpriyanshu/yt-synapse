@@ -129,9 +129,9 @@ function remapTopic(topic) {
 /**
  * Check if a phrase contains blacklisted words
  */
-function isPhraseTainted(phrase) {
+function isPhraseTainted(phrase, blacklist) {
   const words = phrase.toLowerCase().split(/\s+/);
-  return words.some(word => topicBlacklist.has(word));
+  return words.some(word => blacklist.has(word));
 }
 
 function extractCandidateTopics(title) {
@@ -152,7 +152,7 @@ function extractCandidateTopics(title) {
     let clean = stripPunctuation(phrase.trim());
     const low = clean.toLowerCase();
     // Skip if phrase contains any blacklisted words
-    if (!isPhraseTainted(clean) && !blacklist.has(low)) {
+    if (!isPhraseTainted(clean, blacklist) && !blacklist.has(low)) {
       seen.set(low, clean);
     }
   }
@@ -184,7 +184,7 @@ function extractCandidateTopics(title) {
 
   // Apply remapping for deduplication and collect final topics
   seen.forEach((v) => {
-    if (isPlausibleLabel(v) && !isPhraseTainted(v)) {
+    if (isPlausibleLabel(v) && !isPhraseTainted(v, blacklist)) {
       const remapped = remapTopic(v);
       // Avoid duplicates after remapping
       if (!found.includes(remapped)) {
