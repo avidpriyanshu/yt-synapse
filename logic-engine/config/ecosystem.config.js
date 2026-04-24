@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'yt-vault-service',
-      script: 'server.js',
+      script: '../server.js',
       instances: 1,
       exec_mode: 'fork',
       env: {
@@ -14,8 +14,8 @@ module.exports = {
       // Max memory usage
       max_memory_restart: '500M',
       // Logs
-      output: '../.planning/logs/pm2-out.log',
-      error: '../.planning/logs/pm2-err.log',
+      output: '../../.planning/logs/pm2-out.log',
+      error: '../../.planning/logs/pm2-err.log',
       // Merge logs from multiple instances
       merge_logs: true,
       // Watch for file changes (optional - set to false for production)

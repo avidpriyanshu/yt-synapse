@@ -19,7 +19,7 @@ class TopicMerger {
 
   loadHistory() {
     try {
-      const historyPath = path.join(__dirname, '..', 'logic-engine', 'history.json');
+      const historyPath = path.join(__dirname, '..', 'config', 'history.json');
       if (fs.existsSync(historyPath)) {
         return JSON.parse(fs.readFileSync(historyPath, 'utf-8'));
       }
@@ -31,7 +31,7 @@ class TopicMerger {
 
   saveHistory() {
     try {
-      const historyPath = path.join(__dirname, '..', 'logic-engine', 'history.json');
+      const historyPath = path.join(__dirname, '..', 'config', 'history.json');
       fs.writeFileSync(historyPath, JSON.stringify(this.history, null, 2));
     } catch (e) {
       console.error('[topic-merger] Failed to save history:', e.message);

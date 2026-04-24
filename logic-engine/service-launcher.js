@@ -19,7 +19,7 @@
 const { spawn, spawnSync } = require('child_process');
 const http = require('http');
 const path = require('path');
-const logger = require('./logger.js');
+const logger = require('./utils/logger.js');
 
 const SERVICE_PORT = process.env.SERVICE_PORT || 3000;
 const SERVICE_TIMEOUT = 3000; // ms to wait for service startup

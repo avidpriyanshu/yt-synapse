@@ -13,11 +13,11 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const { execFile } = require('child_process');
-const logger = require('./logger.js');
+const logger = require('./utils/logger.js');
 
 class YouTubeVaultAutoStartPlugin {
   constructor() {
-    this.configPath = path.join(__dirname, 'config.json');
+    this.configPath = path.join(__dirname, 'config', 'config.json');
     this.autoStartEnabled = false;
     this.serviceStarted = false;
     this.loadConfig();

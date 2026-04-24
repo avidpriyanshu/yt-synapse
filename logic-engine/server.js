@@ -4,9 +4,9 @@ const http = require('http');
 const { execFile } = require('child_process');
 const path = require('path');
 const fs = require('fs');
-const logger = require('./logger.js');
+const logger = require('./utils/logger.js');
 
-const CONFIG_PATH = path.join(__dirname, 'config.json');
+const CONFIG_PATH = path.join(__dirname, 'config', 'config.json');
 
 let runningProcess = null;
 let runningProcessPid = null;

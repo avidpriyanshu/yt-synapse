@@ -2,8 +2,8 @@
 
 const Parser = require('rss-parser');
 
-const ReviewAgent = require('./reviewer.js');
-const logger = require('./logger.js');
+const ReviewAgent = require('./utils/reviewer.js');
+const logger = require('./utils/logger.js');
 
 const BROWSER_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';

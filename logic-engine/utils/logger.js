@@ -10,7 +10,7 @@ const path = require('path');
  */
 
 function getLogsDir() {
-  return path.join(path.dirname(__dirname), '.planning', 'logs');
+  return path.join(path.resolve(__dirname, '..', '..'), '.planning', 'logs');
 }
 
 function getTodayLogFile() {

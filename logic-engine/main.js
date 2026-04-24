@@ -4,11 +4,11 @@ const fs = require('fs');
 const path = require('path');
 const chokidar = require('chokidar');
 
-const ReviewAgent = require('./reviewer.js');
+const ReviewAgent = require('./utils/reviewer.js');
 const engine = require('./engine.js');
-const processor = require('./processor.js');
-const logger = require('./logger.js');
-const errorMessages = require('./error-messages.js');
+const processor = require('./processing/processor.js');
+const logger = require('./utils/logger.js');
+const errorMessages = require('./utils/error-messages.js');
 
 const VIDEO_BATCH = 15;
 
@@ -44,8 +44,8 @@ function readJson(filePath, fallback) {
   }
 }
 
-const CHANNELS_PATH = path.join(__dirname, 'channels.json');
-const HISTORY_PATH = path.join(__dirname, 'history.json');
+const CHANNELS_PATH = path.join(__dirname, 'config', 'channels.json');
+const HISTORY_PATH = path.join(__dirname, 'config', 'history.json');
 
 function loadHistorySet() {
   const data = readJson(HISTORY_PATH, { videoIds: [] });
@@ -505,7 +505,7 @@ if (require.main === module) {
 
   // Handle topic merge command
   if (args[0] === '--merge-topic-pair' && args[1] && args[2]) {
-    const TopicMerger = require('./topic-merger.js');
+    const TopicMerger = require('./utils/topic-merger.js');
     const merger = new TopicMerger(getVaultRoot());
     console.log(`Merging topic "${args[1]}" into "${args[2]}"...`);
     const result = merger.mergeTopic(args[1], args[2]);
@@ -520,7 +520,7 @@ if (require.main === module) {
 
   // Handle topic listing
   else if (args[0] === '--list-topics') {
-    const TopicMerger = require('./topic-merger.js');
+    const TopicMerger = require('./utils/topic-merger.js');
     const merger = new TopicMerger(getVaultRoot());
     const topics = merger.getAllTopics();
     console.log('Topics in vault:');
@@ -530,7 +530,7 @@ if (require.main === module) {
 
   // Handle duplicate detection
   else if (args[0] === '--find-duplicate-topics') {
-    const TopicMerger = require('./topic-merger.js');
+    const TopicMerger = require('./utils/topic-merger.js');
     const merger = new TopicMerger(getVaultRoot());
     const dupes = merger.findDuplicates();
     console.log('Potential duplicate topics:');

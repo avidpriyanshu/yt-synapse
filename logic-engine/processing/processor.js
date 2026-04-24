@@ -2,13 +2,13 @@
 
 const fs = require('fs');
 const path = require('path');
-const ReviewAgent = require('./reviewer.js');
-const logger = require('./logger.js');
+const ReviewAgent = require('../utils/reviewer.js');
+const logger = require('../utils/logger.js');
 
 /** Load external topic blacklist configuration */
 let topicBlacklist = new Set();
 try {
-  const blacklistPath = path.join(__dirname, '..', '.planning', 'topic-blacklist.json');
+  const blacklistPath = path.join(__dirname, '..', '..', '.planning', 'topic-blacklist.json');
   const blacklistData = JSON.parse(fs.readFileSync(blacklistPath, 'utf-8'));
   topicBlacklist = new Set(Object.keys(blacklistData).map(t => t.toLowerCase()));
   logger.log('INFO', 'PROCESSOR', 'Loaded topic blacklist', `${topicBlacklist.size} terms`);
@@ -25,7 +25,7 @@ try {
 /** Load external topic remap configuration */
 let topicRemap = {};
 try {
-  const remapPath = path.join(__dirname, '..', '.planning', 'topic-remap.json');
+  const remapPath = path.join(__dirname, '..', '..', '.planning', 'topic-remap.json');
   if (fs.existsSync(remapPath)) {
     const remapData = JSON.parse(fs.readFileSync(remapPath, 'utf-8'));
     // Filter out comment/instruction keys
