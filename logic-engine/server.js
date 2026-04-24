@@ -23,11 +23,27 @@ function startScraperProcess() {
     const mainPath = path.join(__dirname, 'main.js');
     runningProcess = execFile('node', [mainPath], (error, stdout, stderr) => {
       if (error && error.killed === false) {
-        logger.log('ERROR', 'SERVICE', 'Scraper process error', error.message);
+        logger.log('ERROR', 'SERVICE', 'Scraper crashed', `${error.message}\nSTDERR: ${stderr}`);
+      } else {
+        logger.log('INFO', 'SERVICE', 'Scraper exited', 'process ended normally');
       }
       runningProcess = null;
       runningProcessPid = null;
     });
+
+    // Capture stderr in real-time
+    if (runningProcess.stderr) {
+      runningProcess.stderr.on('data', (data) => {
+        logger.log('ERROR', 'SERVICE', 'Scraper stderr', data.toString());
+      });
+    }
+
+    // Capture stdout for debugging
+    if (runningProcess.stdout) {
+      runningProcess.stdout.on('data', (data) => {
+        logger.log('DEBUG', 'SERVICE', 'Scraper output', data.toString());
+      });
+    }
 
     runningProcessPid = runningProcess.pid;
     logger.log('INFO', 'SERVICE', 'Scraper started', `PID: ${runningProcessPid}`);
