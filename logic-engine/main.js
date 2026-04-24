@@ -331,9 +331,7 @@ async function processClipping(absPath) {
   let channelId = await engine.resolveChannelIdFromVideo(videoId);
   if (!channelId) {
     logPhase('resolver', 'retry-later', `no channelId for video ${videoId}`);
-    reportFile(
-      `[sync] videos_added=0 topics_created=0 status=retry-later video=${videoId}`
-    );
+    logger.log('INFO', 'sync', `videos_added=0 topics_created=0 status=retry-later video=${videoId}`);
     return;
   }
 
@@ -439,9 +437,7 @@ async function processClipping(absPath) {
     }
   }
 
-  reportFile(
-    `[sync] videos_added=${videosAdded} topics_created=${topicsCreated} channel=${channelId}`
-  );
+  logger.log('INFO', 'sync', `videos_added=${videosAdded} topics_created=${topicsCreated} channel=${channelId}`);
   logPhase(
     phase,
     'done',
@@ -461,7 +457,7 @@ function scheduleProcess(absPath) {
     processClipping(absPath).catch((e) => {
       const userMessage = errorMessages.getErrorMessage(e, { action: 'process video' });
       logger.error('Processing failed', userMessage);
-      reportFile(`[error] ${e.stack || e}`);
+      logger.log('ERROR', 'sync', `${e.stack || e}`);
     });
   }, debounceMs);
   pendingTimers.set(absPath, t);
