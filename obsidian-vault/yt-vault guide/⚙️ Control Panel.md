@@ -391,7 +391,7 @@ if (addWordBtn) {
 loadBlacklist();
 ```
 
-## Recent Topics
+	## Recent Topics
 
 ```dataviewjs
 dv.container.innerHTML = `
@@ -415,7 +415,7 @@ const errorDiv = dv.container.querySelector('#topics-error');
 
 async function loadTopics() {
   try {
-    const res = await fetch(\`\${SERVICE_API}/topics/recent\`);
+    const res = await fetch(SERVICE_API + '/topics/recent');
     const data = await res.json();
     
     if (!data.ok || !data.topics || data.topics.length === 0) {
@@ -424,31 +424,26 @@ async function loadTopics() {
       return;
     }
     
-    const html = \`
-      <div style="display: flex; flex-direction: column; gap: 0.5em;">
-        \${data.topics.map(t => {
-          const bgColor = t.qualityScore === 'HIGH' ? '#4a8a2e' : t.qualityScore === 'MED' ? '#8a7a2e' : '#8a2e2e';
-          const textColor = 'white';
-          return \`
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5em; background-color: \${bgColor}; color: \${textColor}; border-radius: 0.3em; font-size: 0.9em;">
-              <span><strong>\${t.name}</strong> (\${t.videoCount} video\${t.videoCount !== 1 ? 's' : ''})</span>
-              <button data-topic="\${t.name}" class="blacklist-btn" style="padding: 0.3em 0.6em; background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 0.2em; cursor: pointer; font-size: 0.85em;">Block</button>
-            </div>
-          \`;
-        }).join('')}
-      </div>
-    \`;
+    let html = '<div style="display: flex; flex-direction: column; gap: 0.5em;">';
+    data.topics.forEach(t => {
+      const bgColor = t.qualityScore === 'HIGH' ? '#4a8a2e' : t.qualityScore === 'MED' ? '#8a7a2e' : '#8a2e2e';
+      const label = t.videoCount + ' video' + (t.videoCount !== 1 ? 's' : '');
+      html += '<div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5em; background-color: ' + bgColor + '; color: white; border-radius: 0.3em; font-size: 0.9em;">';
+      html += '<span><strong>' + t.name + '</strong> (' + label + ')</span>';
+      html += '<button data-topic="' + t.name + '" class="blacklist-btn" style="padding: 0.3em 0.6em; background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 0.2em; cursor: pointer; font-size: 0.85em;">Block</button>';
+      html += '</div>';
+    });
+    html += '</div>';
     
     containerDiv.innerHTML = html;
     loadingDiv.style.display = 'none';
     containerDiv.style.display = 'block';
     
-    // Add blacklist handlers
     dv.container.querySelectorAll('.blacklist-btn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const topic = e.target.getAttribute('data-topic');
         try {
-          const res = await fetch(\`\${SERVICE_API}/blacklist/add\`, {
+          const res = await fetch(SERVICE_API + '/blacklist/add', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ word: topic })
