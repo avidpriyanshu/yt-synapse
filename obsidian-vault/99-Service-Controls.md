@@ -7,43 +7,47 @@ type: settings
 
 > Non-technical users can start, stop, and monitor the YouTube vault scraper from this page.
 
-## Scraper Status
-
-**Current Status:** <span id="status-indicator">Checking...</span>
-
-Last check: <span id="last-check">--:--:--</span>
-
 ## Controls
 
 ```dataviewjs
 // Service Control Panel
 dv.container.innerHTML = `
-<div id="service-panel" style="padding: 1em; border: 1px solid var(--background-modifier-border); border-radius: 0.5em; background-color: var(--background-secondary);">
+<div style="padding: 1em; border: 1px solid var(--background-modifier-border); border-radius: 0.5em; background-color: var(--background-secondary);">
+  
+  <div style="margin-bottom: 1.5em; padding: 1em; background-color: var(--background-tertiary); border-radius: 0.5em; border-left: 4px solid var(--interactive-accent);">
+    <div style="font-size: 0.9em; color: var(--text-muted); margin-bottom: 0.5em;">SCRAPER STATUS</div>
+    <div style="font-size: 1.2em; margin-bottom: 0.5em;">
+      <span id="status-indicator" style="font-weight: bold;">🔄 Checking...</span>
+    </div>
+    <div style="font-size: 0.85em; color: var(--text-muted);">
+      Last update: <span id="last-check">--:--:--</span>
+    </div>
+  </div>
   
   <div style="margin-bottom: 1em;">
-    <button id="btn-start" style="padding: 0.5em 1em; margin-right: 0.5em; cursor: pointer; background: var(--interactive-accent); color: white; border: none; border-radius: 0.3em;">
-      Start Scraping
+    <button id="btn-start" style="padding: 0.5em 1em; margin-right: 0.5em; cursor: pointer; background: var(--interactive-accent); color: white; border: none; border-radius: 0.3em; font-weight: bold;">
+      ▶ Start Scraping
     </button>
-    <button id="btn-stop" style="padding: 0.5em 1em; margin-right: 0.5em; cursor: pointer; background: var(--background-modifier-error); color: white; border: none; border-radius: 0.3em;">
-      Stop Scraping
+    <button id="btn-stop" style="padding: 0.5em 1em; margin-right: 0.5em; cursor: pointer; background: var(--background-modifier-error); color: white; border: none; border-radius: 0.3em; font-weight: bold;">
+      ⏹ Stop Scraping
     </button>
-    <button id="btn-logs" style="padding: 0.5em 1em; cursor: pointer; background: var(--interactive-normal); color: white; border: none; border-radius: 0.3em;">
-      View Logs
+    <button id="btn-logs" style="padding: 0.5em 1em; cursor: pointer; background: var(--interactive-normal); color: white; border: none; border-radius: 0.3em; font-weight: bold;">
+      📋 View Logs
     </button>
   </div>
   
-  <div id="message" style="padding: 0.5em; border-radius: 0.3em; margin-top: 0.5em; display: none;"></div>
+  <div id="message" style="padding: 0.5em; border-radius: 0.3em; margin-top: 0.5em; display: none; font-weight: bold;"></div>
+  
+  <div id="logs-container" style="display: none; margin-top: 1em; padding: 1em; background-color: var(--background-tertiary); border-radius: 0.5em; max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 0.9em; white-space: pre-wrap; word-wrap: break-word;"></div>
   
 </div>
-
-<div id="logs-container" style="display: none; margin-top: 1em; padding: 1em; background-color: var(--background-tertiary); border-radius: 0.5em; max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 0.9em; white-space: pre-wrap; word-wrap: break-word;"></div>
 `;
 
 const SERVICE_API = 'http://localhost:3000';
-const statusIndicator = document.getElementById('status-indicator');
-const lastCheckTime = document.getElementById('last-check');
-const messageDiv = document.getElementById('message');
-const logsContainer = document.getElementById('logs-container');
+const statusIndicator = dv.container.querySelector('#status-indicator');
+const lastCheckTime = dv.container.querySelector('#last-check');
+const messageDiv = dv.container.querySelector('#message');
+const logsContainer = dv.container.querySelector('#logs-container');
 
 function updateTime() {
   const now = new Date();
@@ -127,10 +131,14 @@ function showMessage(text, type) {
   }, 3000);
 }
 
-// Attach event listeners
-document.getElementById('btn-start').addEventListener('click', startScraper);
-document.getElementById('btn-stop').addEventListener('click', stopScraper);
-document.getElementById('btn-logs').addEventListener('click', viewLogs);
+// Attach event listeners (use dv.container for correct context)
+const btnStart = dv.container.querySelector('#btn-start');
+const btnStop = dv.container.querySelector('#btn-stop');
+const btnLogs = dv.container.querySelector('#btn-logs');
+
+if (btnStart) btnStart.addEventListener('click', startScraper);
+if (btnStop) btnStop.addEventListener('click', stopScraper);
+if (btnLogs) btnLogs.addEventListener('click', viewLogs);
 
 // Initial status check and periodic updates
 checkStatus();
