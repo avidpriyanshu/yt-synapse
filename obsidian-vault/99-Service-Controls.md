@@ -140,8 +140,34 @@ if (btnStart) btnStart.addEventListener('click', startScraper);
 if (btnStop) btnStop.addEventListener('click', stopScraper);
 if (btnLogs) btnLogs.addEventListener('click', viewLogs);
 
-// Initial status check and periodic updates
-checkStatus();
+// Check config and auto-start if enabled
+async function initializeAutoStart() {
+  try {
+    const res = await fetch(`${SERVICE_API}/config`);
+    const config = await res.json();
+    
+    if (config.autoStartScraper === true) {
+      // Give a small delay to ensure service is ready
+      setTimeout(() => {
+        checkStatus();
+        setTimeout(() => {
+          const status = dv.container.querySelector('#status-indicator');
+          if (status && status.textContent.includes('Stopped')) {
+            startScraper();
+          }
+        }, 500);
+      }, 1000);
+    } else {
+      checkStatus();
+    }
+  } catch (err) {
+    // Fallback: just check status if config fetch fails
+    checkStatus();
+  }
+}
+
+// Initial setup and periodic updates
+initializeAutoStart();
 setInterval(checkStatus, 2000);
 ```
 
