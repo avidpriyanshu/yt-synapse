@@ -347,7 +347,9 @@ async function processClipping(absPath) {
   let channelId = await engine.resolveChannelIdFromVideo(videoId);
   if (!channelId) {
     logPhase('resolver', 'retry-later', `no channelId for video ${videoId}`);
+    logger.log('WARN', 'resolver', `FAILED to resolve channelId for ${videoId} (will retry in 5 minutes)`);
     logger.log('INFO', 'sync', `videos_added=0 topics_created=0 status=retry-later video=${videoId}`);
+    trackFailedVideo(absPath, videoId);
     return;
   }
 
@@ -464,6 +466,7 @@ async function processClipping(absPath) {
 
 const debounceMs = 800;
 const pendingTimers = new Map();
+const failedVideos = new Map(); // Track failed videos for retry
 
 function scheduleProcess(absPath) {
   if (pendingTimers.has(absPath)) {
@@ -478,6 +481,31 @@ function scheduleProcess(absPath) {
     });
   }, debounceMs);
   pendingTimers.set(absPath, t);
+}
+
+function trackFailedVideo(filePath, videoId) {
+  failedVideos.set(filePath, {
+    videoId,
+    failedAt: Date.now(),
+    attempts: (failedVideos.get(filePath)?.attempts || 0) + 1,
+  });
+  logger.log('INFO', 'retry-tracker', `tracking failed video ${videoId} (attempt ${failedVideos.get(filePath).attempts})`);
+}
+
+function startRetryInterval() {
+  setInterval(() => {
+    if (failedVideos.size === 0) return;
+
+    logger.log('INFO', 'retry-scheduler', `retrying ${failedVideos.size} failed video(s)`);
+    const filesToRetry = Array.from(failedVideos.entries());
+
+    filesToRetry.forEach(([filePath, data]) => {
+      scheduleProcess(filePath);
+      logger.log('INFO', 'retry-scheduler', `queued retry for ${data.videoId} (attempt ${data.attempts + 1})`);
+    });
+
+    failedVideos.clear();
+  }, 5 * 60 * 1000); // 5 minutes
 }
 
 function startWatcher() {
@@ -578,9 +606,11 @@ if (require.main === module) {
     process.exit(0);
   }
 
-  // Default: start watcher
+  // Default: start watcher and retry scheduler
   else {
     startWatcher();
+    startRetryInterval();
+    logger.log('INFO', 'boot', 'retry scheduler started (5-minute interval)');
   }
 }
 
