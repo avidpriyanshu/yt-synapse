@@ -29,5 +29,12 @@
   "almost": "qualifier",
   "more": "comparative",
   "amazing": "hyperbolic",
-  "awesome": "hyperbolic"
+  "awesome": "hyperbolic",
+  "results": "generic outcome",
+  "tips": "generic advice",
+  "tricks": "generic advice",
+  "tutorial": "content type",
+  "guide": "content type",
+  "review": "content type",
+  "channel": "generic"
 }

@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "chokidar": "^4.0.3",
-    "compromise": "^14.14.4",
     "gray-matter": "^4.0.3",
     "rss-parser": "^3.13.0"
   }

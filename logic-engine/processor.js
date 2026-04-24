@@ -1,77 +1,49 @@
 'use strict';
 
-const nlp = require('compromise');
+const fs = require('fs');
+const path = require('path');
 const ReviewAgent = require('./reviewer.js');
 
-/** Clickbait / noise tokens (lowercase); years handled separately */
-const CLICKBAIT = new Set([
-  'must',
-  'watch',
-  'insane',
-  'crazy',
-  'shocking',
-  'ultimate',
-  'best',
-  'worst',
-  'official',
-  'trailer',
-  'new',
-  'live',
-  'streaming',
-  'episode',
-  'full',
-]);
+/** Load external topic blacklist configuration */
+let topicBlacklist = new Set();
+try {
+  const blacklistPath = path.join(__dirname, '..', '.planning', 'topic-blacklist.json');
+  const blacklistData = JSON.parse(fs.readFileSync(blacklistPath, 'utf-8'));
+  topicBlacklist = new Set(Object.keys(blacklistData).map(t => t.toLowerCase()));
+} catch (e) {
+  console.warn('[processor] Failed to load topic blacklist, using defaults:', e.message);
+  topicBlacklist = new Set([
+    'must', 'watch', 'insane', 'crazy', 'shocking', 'ultimate', 'best', 'worst',
+    'official', 'trailer', 'new', 'live', 'streaming', 'episode', 'full',
+    'video', 'update', 'the', 'you', 'and', 'for', 'are', 'that', 'this',
+    'one', 'can', 'get', 'almost', 'more', 'amazing', 'awesome',
+  ]);
+}
 
-const mergedBlacklist = new Set([
-  ...ReviewAgent.DEFAULT_TOPIC_BLACKLIST,
-  ...CLICKBAIT,
-]);
+/** Load external topic remap configuration */
+let topicRemap = {};
+try {
+  const remapPath = path.join(__dirname, '..', '.planning', 'topic-remap.json');
+  if (fs.existsSync(remapPath)) {
+    const remapData = JSON.parse(fs.readFileSync(remapPath, 'utf-8'));
+    // Filter out comment/instruction keys
+    Object.keys(remapData).forEach(key => {
+      if (!key.startsWith('_')) {
+        topicRemap[key.toLowerCase()] = remapData[key];
+      }
+    });
+  }
+} catch (e) {
+  console.warn('[processor] Failed to load topic remap, continuing without:', e.message);
+  topicRemap = {};
+}
 
 const STOP_LABELS = new Set([
-  'you',
-  'the',
-  'and',
-  'for',
-  'are',
-  'that',
-  'this',
-  'one',
-  'any',
-  'only',
-  'then',
-  'there',
-  'your',
-  'from',
-  'into',
-  'when',
-  'what',
-  'how',
-  'why',
-  'just',
-  'also',
-  'here',
-  'all',
-  'most',
-  'some',
-  'more',
-  'less',
-  'much',
-  'many',
-  'too',
-  'very',
-  'even',
-  'still',
-  'yet',
-  'with',
-  'but',
-  'or',
-  'in',
-  'on',
-  'at',
-  'by',
-  'to',
-  'a',
-  'an',
+  'you', 'the', 'and', 'for', 'are', 'that', 'this', 'one', 'any',
+  'only', 'then', 'there', 'your', 'from', 'into', 'when', 'what',
+  'how', 'why', 'just', 'also', 'here', 'all', 'most', 'some', 'more',
+  'less', 'much', 'many', 'too', 'very', 'even', 'still', 'yet', 'with',
+  'but', 'or', 'in', 'on', 'at', 'by', 'to', 'a', 'an',
 ]);
 
 function isPlausibleLabel(t) {
@@ -111,67 +83,78 @@ function stripPunctuation(s) {
   return s.replace(/^['"().,;:!?\-_\[\]]+|['"().,;:!?\-_\[\]]+$/g, '');
 }
 
+/**
+ * Apply topic remapping for deduplication
+ */
+function remapTopic(topic) {
+  if (!topic) return topic;
+  const key = topic.toLowerCase();
+  return topicRemap[key] || topic;
+}
+
 function extractCandidateTopics(title) {
   if (!title || typeof title !== 'string') return [];
 
   let t = stripBareYears(title);
-  const doc = nlp(t);
-
   const found = [];
 
   /** @type {Map<string,string>} lowercase -> display */
   const seen = new Map();
 
-  const people = doc.people().out('array');
-  for (const p of people) {
-    let s = String(p).trim();
-    s = stripPunctuation(s);
-    if (s.length >= 2) seen.set(s.toLowerCase(), s);
-  }
+  // Extract capitalized multi-word phrases (2-3 words): "Machine Learning", "Web Development"
+  // Prioritize longer phrases first to avoid individual word extraction
+  const capPhrases = t.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2}\b/g) || [];
+  const usedRanges = new Set(); // Track which words we've already extracted
 
-  const places = doc.places().out('array');
-  for (const p of places) {
-    let s = String(p).trim();
-    s = stripPunctuation(s);
-    if (s.length >= 2) seen.set(s.toLowerCase(), s);
-  }
-
-  doc.match('#Noun+').json().forEach((chunk) => {
-    let txt = chunk.text.trim();
-    txt = stripPunctuation(txt);
-    if (
-      txt.length >= 3 &&
-      /^[A-Z]/.test(txt) &&
-      !CLICKBAIT.has(txt.toLowerCase())
-    ) {
-      seen.set(txt.toLowerCase(), txt);
-    }
-  });
-
-  /** Capitalized sequences (potential proper nouns missed) */
-  const capPhrases = t.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3}\b/g) || [];
   for (const phrase of capPhrases) {
     let clean = stripPunctuation(phrase.trim());
     const low = clean.toLowerCase();
-    if (!CLICKBAIT.has(low)) seen.set(low, clean);
+    if (!topicBlacklist.has(low)) {
+      seen.set(low, clean);
+      usedRanges.add(low); // Mark these words as used
+    }
   }
 
-  /** ALL CAPS tokens (likely acronyms), 2–10 chars */
-  const acronyms =
-    t.match(/\b[A-Z]{2,10}\b/g) || [];
+  // Extract single capitalized words if they're 5+ chars (likely proper nouns)
+  // Skip if already captured in a multi-word phrase
+  const capWords = t.match(/\b[A-Z][a-z]{4,}\b/g) || [];
+  for (const word of capWords) {
+    let clean = stripPunctuation(word.trim());
+    const low = clean.toLowerCase();
+    // Don't extract single words that are part of a multi-word phrase
+    const isPartOfPhrase = Array.from(seen.values()).some(phrase =>
+      phrase.toLowerCase().includes(low)
+    );
+    if (!topicBlacklist.has(low) && !isPartOfPhrase) {
+      seen.set(low, clean);
+    }
+  }
+
+  // Extract ALL CAPS tokens (likely acronyms), 2–10 chars
+  const acronyms = t.match(/\b[A-Z]{2,10}\b/g) || [];
   for (const a of acronyms) {
     const clean = stripPunctuation(a);
-    if (clean) seen.set(clean.toLowerCase(), clean);
+    const low = clean.toLowerCase();
+    if (clean && !topicBlacklist.has(low)) {
+      seen.set(low, clean);
+    }
   }
 
+  // Apply remapping for deduplication and collect final topics
   seen.forEach((v) => {
-    if (isPlausibleLabel(v)) found.push(v);
+    if (isPlausibleLabel(v)) {
+      const remapped = remapTopic(v);
+      // Avoid duplicates after remapping
+      if (!found.includes(remapped)) {
+        found.push(remapped);
+      }
+    }
   });
 
   return ReviewAgent.cleanTopics(found, {
     minLen: 3,
     maxTopics: 7,
-    blacklist: mergedBlacklist,
+    blacklist: topicBlacklist,
   });
 }
 
@@ -185,5 +168,7 @@ function topicsToWikiLinks(labels) {
 module.exports = {
   extractCandidateTopics,
   topicsToWikiLinks,
-  CLICKBAIT,
+  remapTopic,
+  topicBlacklist,
+  topicRemap,
 };
