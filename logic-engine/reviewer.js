@@ -157,6 +157,35 @@ function checkFileExists(filePath) {
   }
 }
 
+/**
+ * Validate video metadata (duration, viewCount).
+ * @param {Object} metadata - Metadata object
+ * @param {number|null} metadata.duration - Duration in seconds
+ * @param {number|null} metadata.viewCount - View count
+ * @returns {Object} Validation result {ok: boolean, errors: string[]}
+ */
+function validateVideoMetadata(metadata) {
+  const errors = [];
+
+  if (metadata.duration !== null && metadata.duration !== undefined) {
+    if (typeof metadata.duration !== 'number' || isNaN(metadata.duration)) {
+      errors.push('duration must be a number');
+    } else if (metadata.duration < 0) {
+      errors.push('duration must be non-negative');
+    }
+  }
+
+  if (metadata.viewCount !== null && metadata.viewCount !== undefined) {
+    if (typeof metadata.viewCount !== 'number' || isNaN(metadata.viewCount)) {
+      errors.push('viewCount must be a number');
+    } else if (metadata.viewCount < 0) {
+      errors.push('viewCount must be non-negative');
+    }
+  }
+
+  return { ok: errors.length === 0, errors };
+}
+
 module.exports = {
   sanitizeFilename,
   validateFilename,
@@ -167,6 +196,7 @@ module.exports = {
   cleanTopics,
   toPascalCaseWords,
   checkFileExists,
+  validateVideoMetadata,
   INVALID_FILENAME_CHARS,
   DEFAULT_TOPIC_BLACKLIST,
 };
