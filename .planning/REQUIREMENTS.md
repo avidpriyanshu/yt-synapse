@@ -33,10 +33,10 @@
 - [x] **SVC-05**: System logs scrapes to daily log file with timestamps and status
 
 ### Accessibility (A11Y)
-- [ ] **A11Y-01**: Non-technical user can set up scraper without editing configuration files
-- [ ] **A11Y-02**: Non-technical user can understand what system is doing via clear logging
-- [ ] **A11Y-03**: Settings UI presented in Obsidian (not command line)
-- [ ] **A11Y-04**: Errors explained in plain language (not developer errors)
+- [x] **A11Y-01**: Non-technical user can set up scraper without editing configuration files
+- [x] **A11Y-02**: Non-technical user can understand what system is doing via clear logging
+- [x] **A11Y-03**: Settings UI presented in Obsidian (not command line)
+- [x] **A11Y-04**: Errors explained in plain language (not developer errors)
 
 ---
 
@@ -72,7 +72,7 @@
 | 3 | CHAN-01, CHAN-02, CHAN-03, CHAN-04 | ✅ Complete |
 | 4 | TOPIC-01, TOPIC-02, TOPIC-03, TOPIC-04 | In Progress |
 | 5 | SVC-01, SVC-02, SVC-03, SVC-04, SVC-05 | ✅ Complete |
-| 6 | A11Y-01, A11Y-02, A11Y-03, A11Y-04 | Pending |
+| 6 | A11Y-01, A11Y-02, A11Y-03, A11Y-04 | ✅ Complete |
 
 ---
 
