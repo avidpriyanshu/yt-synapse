@@ -1,0 +1,7 @@
+{
+  "_comment": "YouTube Vault Service Configuration",
+  "autoStartScraper": false,
+  "_autoStart_help": "Set to true to automatically start scraper when Obsidian vault opens",
+  "loggingLevel": "INFO",
+  "_loggingLevel_help": "Levels: INFO (standard), WARN (non-blocking), ERROR (failures)"
+}
