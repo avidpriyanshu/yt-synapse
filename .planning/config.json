@@ -11,6 +11,7 @@
     "ai_integration_phase": true,
     "text_mode": false,
     "research_before_questions": false,
+    "discuss_mode": "discuss",
     "skip_discuss": false,
     "use_worktrees": true
   },
