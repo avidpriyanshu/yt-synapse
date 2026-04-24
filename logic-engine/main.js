@@ -8,6 +8,7 @@ const ReviewAgent = require('./reviewer.js');
 const engine = require('./engine.js');
 const processor = require('./processor.js');
 const logger = require('./logger.js');
+const errorMessages = require('./error-messages.js');
 
 const VIDEO_BATCH = 15;
 
@@ -353,7 +354,8 @@ async function processClipping(absPath) {
     feedTitle = feed.feedTitle || feedTitle;
     items = feed.items || [];
   } catch (e) {
-    logPhase('harvester', 'error', String(e.message || e));
+    const userMessage = errorMessages.getErrorMessage(e, { action: 'fetch videos from YouTube' });
+    logger.error('Video fetch failed', userMessage);
     return;
   }
 
@@ -457,7 +459,8 @@ function scheduleProcess(absPath) {
   const t = setTimeout(() => {
     pendingTimers.delete(absPath);
     processClipping(absPath).catch((e) => {
-      console.error(e);
+      const userMessage = errorMessages.getErrorMessage(e, { action: 'process video' });
+      logger.error('Processing failed', userMessage);
       reportFile(`[error] ${e.stack || e}`);
     });
   }, debounceMs);
@@ -496,7 +499,8 @@ function startWatcher() {
   watcher.on('change', handleMd);
 
   watcher.on('error', (err) => {
-    logPhase('watcher', 'error', String(err));
+    const userMessage = errorMessages.getErrorMessage(err, { action: 'monitor vault folder' });
+    logger.error('Vault monitoring error', userMessage);
   });
 }
 
@@ -513,7 +517,7 @@ if (require.main === module) {
       console.log(`✓ Success: ${result.mergedCount} videos updated`);
       process.exit(0);
     } else {
-      console.error(`✗ Error: ${result.error}`);
+      logger.error('Startup failed', result.error);
       process.exit(1);
     }
   }
