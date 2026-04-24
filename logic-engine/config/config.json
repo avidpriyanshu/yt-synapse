@@ -3,5 +3,7 @@
   "autoStartScraper": true,
   "_autoStart_help": "Set to true to automatically start scraper when Obsidian vault opens",
   "loggingLevel": "INFO",
-  "_loggingLevel_help": "Levels: INFO (standard), WARN (non-blocking), ERROR (failures)"
+  "_loggingLevel_help": "Levels: INFO (standard), WARN (non-blocking), ERROR (failures)",
+  "videoBatchSize": 15,
+  "_videoBatchSize_help": "Max videos to process per channel (1-50)"
 }

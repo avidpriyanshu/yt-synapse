@@ -94,7 +94,7 @@ You don't need to do anything! Here's what happens:
 
 ### From the Dashboard
 
-1. Go to [[Dashboard]]
+1. Go to [[🎥 Dashboard]]
 2. Click on the **Channel** column in the video table
 3. It takes you to that creator's page with all their videos
 
@@ -165,7 +165,7 @@ tags:
 
 - Browse [[Channels-Index]] to see all your creators
 - Tag channels by category so videos are easier to find
-- Check [[Dashboard]] to discover videos across all channels
+- Check [[🎥 Dashboard]] to discover videos across all channels
 
 ---
 

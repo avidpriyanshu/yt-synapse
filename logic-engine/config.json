@@ -1,0 +1,5 @@
+{
+  "autoStartScraper": true,
+  "loggingLevel": "INFO",
+  "videoBatchSize": 15
+}

@@ -171,17 +171,105 @@ initializeAutoStart();
 setInterval(checkStatus, 2000);
 ```
 
-## Auto-Start Configuration
+## Settings
 
-See `config.json` in logic-engine to enable auto-start on vault open:
+```dataviewjs
+dv.container.innerHTML = `
+<div style="padding: 1em; border: 1px solid var(--background-modifier-border); border-radius: 0.5em; background-color: var(--background-secondary);">
+  
+  <div style="margin-bottom: 1em;">
+    <div style="font-size: 0.9em; color: var(--text-muted); margin-bottom: 0.5em; font-weight: bold;">AUTO-START SCRAPER</div>
+    <label style="display: flex; align-items: center; cursor: pointer;">
+      <input id="setting-autostart" type="checkbox" style="margin-right: 0.5em;" />
+      <span>Automatically start scraper when vault opens</span>
+    </label>
+  </div>
+  
+  <div style="margin-bottom: 1em;">
+    <div style="font-size: 0.9em; color: var(--text-muted); margin-bottom: 0.3em; font-weight: bold;">LOGGING LEVEL</div>
+    <select id="setting-loglevel" style="padding: 0.3em 0.5em; border: 1px solid var(--background-modifier-border); border-radius: 0.3em; background-color: var(--background-tertiary);">
+      <option value="INFO">INFO (standard)</option>
+      <option value="WARN">WARN (non-blocking)</option>
+      <option value="ERROR">ERROR (failures)</option>
+    </select>
+  </div>
+  
+  <div style="margin-bottom: 1.5em;">
+    <div style="font-size: 0.9em; color: var(--text-muted); margin-bottom: 0.3em; font-weight: bold;">VIDEOS PER BATCH</div>
+    <input id="setting-batchsize" type="number" min="1" max="50" style="padding: 0.3em 0.5em; border: 1px solid var(--background-modifier-border); border-radius: 0.3em; background-color: var(--background-tertiary); width: 80px;" />
+    <span style="font-size: 0.8em; color: var(--text-muted); margin-left: 0.5em;">max videos to process per channel</span>
+  </div>
+  
+  <div>
+    <button id="btn-save-settings" style="padding: 0.5em 1em; cursor: pointer; background: var(--interactive-accent); color: white; border: none; border-radius: 0.3em; font-weight: bold;">
+      💾 Save Settings
+    </button>
+  </div>
+  
+  <div id="settings-message" style="padding: 0.5em; border-radius: 0.3em; margin-top: 0.5em; display: none; font-weight: bold;"></div>
+  
+</div>
+`;
 
-```json
-{
-  "autoStartScraper": false
+const SERVICE_API = 'http://localhost:3000';
+const autostartInput = dv.container.querySelector('#setting-autostart');
+const loglevelSelect = dv.container.querySelector('#setting-loglevel');
+const batchsizeInput = dv.container.querySelector('#setting-batchsize');
+const saveBtn = dv.container.querySelector('#btn-save-settings');
+const settingsMsg = dv.container.querySelector('#settings-message');
+
+function showSettingsMessage(text, type) {
+  settingsMsg.textContent = text;
+  settingsMsg.style.display = 'block';
+  settingsMsg.style.backgroundColor = type === 'success' ? 'var(--background-modifier-success)' : 'var(--background-modifier-error)';
+  settingsMsg.style.color = type === 'success' ? 'var(--text-muted)' : 'white';
+  
+  setTimeout(() => {
+    settingsMsg.style.display = 'none';
+  }, 3000);
 }
-```
 
-Set to `true` to automatically start scraper when vault opens.
+async function loadSettings() {
+  try {
+    const res = await fetch(`${SERVICE_API}/config`);
+    const config = await res.json();
+    
+    autostartInput.checked = config.autoStartScraper === true;
+    loglevelSelect.value = config.loggingLevel || 'INFO';
+    batchsizeInput.value = config.videoBatchSize || 15;
+  } catch (err) {
+    showSettingsMessage('Error loading settings: ' + err.message, 'error');
+  }
+}
+
+async function saveSettings() {
+  try {
+    const updates = {
+      autoStartScraper: autostartInput.checked,
+      loggingLevel: loglevelSelect.value,
+      videoBatchSize: parseInt(batchsizeInput.value, 10) || 15
+    };
+    
+    const res = await fetch(`${SERVICE_API}/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    });
+    
+    const data = await res.json();
+    if (data.ok) {
+      showSettingsMessage('✓ Settings saved', 'success');
+    } else {
+      showSettingsMessage('✗ Failed to save: ' + (data.error || 'unknown error'), 'error');
+    }
+  } catch (err) {
+    showSettingsMessage('✗ Error: ' + err.message, 'error');
+  }
+}
+
+if (saveBtn) saveBtn.addEventListener('click', saveSettings);
+loadSettings();
+```
 
 ---
 
@@ -191,5 +279,6 @@ Set to `true` to automatically start scraper when vault opens.
 2. **Stop** — Terminates the running scraper process gracefully
 3. **View Logs** — Displays today's timestamped log file
 4. **Status** — Auto-updates every 2 seconds showing if scraper is running
+5. **Settings** — Change scraper behavior (auto-start, logging verbosity, batch size)
 
 Logs are saved to `.planning/logs/run-YYYY-MM-DD.log` with one entry per successful/failed video.

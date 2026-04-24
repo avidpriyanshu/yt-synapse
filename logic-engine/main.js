@@ -10,7 +10,7 @@ const processor = require('./processing/processor.js');
 const logger = require('./utils/logger.js');
 const errorMessages = require('./utils/error-messages.js');
 
-const VIDEO_BATCH = 15;
+const CONFIG_PATH = path.join(__dirname, 'config', 'config.json');
 
 function getVaultRoot() {
   return (
@@ -46,6 +46,15 @@ function readJson(filePath, fallback) {
 
 const CHANNELS_PATH = path.join(__dirname, 'config', 'channels.json');
 const HISTORY_PATH = path.join(__dirname, 'config', 'history.json');
+
+function getVideoBatchSize() {
+  try {
+    const cfg = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+    return Number(cfg.videoBatchSize) || 15;
+  } catch {
+    return 15;
+  }
+}
 
 function loadHistorySet() {
   const data = readJson(HISTORY_PATH, { videoIds: [] });
@@ -180,7 +189,9 @@ function extractClipSource(markdown, filePath) {
     return { ok: false, reason: 'could not parse video id from URL' };
   }
 
-  return { ok: true, source, videoId };
+  const scrapping = String(data.scrapping || '').trim().toLowerCase();
+
+  return { ok: true, source, videoId, scrapping };
 }
 
 function videoNoteFilename(title, videoId) {
@@ -325,6 +336,11 @@ async function processClipping(absPath) {
     return;
   }
 
+  if (clip.scrapping === 'no' || clip.scrapping === '') {
+    logPhase('watcher', 'skip-scrapping', `scrapping disabled for ${path.basename(absPath)}`);
+    return;
+  }
+
   const { source, videoId } = clip;
   logPhase('extractor', 'videoId', videoId);
 
@@ -367,6 +383,7 @@ async function processClipping(absPath) {
   const history = loadHistorySet();
   const fresh = [];
 
+  const VIDEO_BATCH = getVideoBatchSize();
   for (const it of items) {
     if (!it.videoId) continue;
     if (history.has(it.videoId)) continue;
