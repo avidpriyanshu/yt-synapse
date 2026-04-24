@@ -7,6 +7,7 @@ const chokidar = require('chokidar');
 const ReviewAgent = require('./reviewer.js');
 const engine = require('./engine.js');
 const processor = require('./processor.js');
+const logger = require('./logger.js');
 
 const VIDEO_BATCH = 15;
 
@@ -18,21 +19,8 @@ function getVaultRoot() {
 }
 
 function logPhase(phase, action, detail) {
-  const msg = `[${phase}] ${action} : ${detail}`;
-  console.log(msg);
-  reportFile(msg);
-}
-
-function reportFile(line) {
-  const logsDir = path.join(__dirname, 'logs');
-  fs.mkdirSync(logsDir, { recursive: true });
-  const day = new Date().toISOString().slice(0, 10);
-  const logFile = path.join(logsDir, `run-${day}.log`);
-  fs.appendFileSync(
-    logFile,
-    `[${new Date().toISOString()}] ${line}\n`,
-    'utf8'
-  );
+  // Route to centralized logger module (keeping for compatibility)
+  logger.log('INFO', phase, action, detail);
 }
 
 function writeJsonAtomic(filePath, obj) {

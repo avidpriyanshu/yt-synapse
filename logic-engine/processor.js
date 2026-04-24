@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const ReviewAgent = require('./reviewer.js');
+const logger = require('./logger.js');
 
 /** Load external topic blacklist configuration */
 let topicBlacklist = new Set();
@@ -10,8 +11,9 @@ try {
   const blacklistPath = path.join(__dirname, '..', '.planning', 'topic-blacklist.json');
   const blacklistData = JSON.parse(fs.readFileSync(blacklistPath, 'utf-8'));
   topicBlacklist = new Set(Object.keys(blacklistData).map(t => t.toLowerCase()));
+  logger.log('INFO', 'PROCESSOR', 'Loaded topic blacklist', `${topicBlacklist.size} terms`);
 } catch (e) {
-  console.warn('[processor] Failed to load topic blacklist, using defaults:', e.message);
+  logger.log('WARN', 'PROCESSOR', 'Failed to load topic blacklist', `Using defaults: ${e.message}`);
   topicBlacklist = new Set([
     'must', 'watch', 'insane', 'crazy', 'shocking', 'ultimate', 'best', 'worst',
     'official', 'trailer', 'new', 'live', 'streaming', 'episode', 'full',
@@ -32,9 +34,10 @@ try {
         topicRemap[key.toLowerCase()] = remapData[key];
       }
     });
+    logger.log('INFO', 'PROCESSOR', 'Loaded topic remap', `${Object.keys(topicRemap).length} mappings`);
   }
 } catch (e) {
-  console.warn('[processor] Failed to load topic remap, continuing without:', e.message);
+  logger.log('WARN', 'PROCESSOR', 'Failed to load topic remap', `Continuing without: ${e.message}`);
   topicRemap = {};
 }
 
