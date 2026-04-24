@@ -30,6 +30,13 @@ Last activity: 2026-04-24 — Phase 06 Plan 06 accessibility completed (4 tasks,
 - Dataview plugin required for dynamic queries
 - Channel categorization needed for better organization
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commits | Directory |
+|---|-------------|------|---------|-----------|
+| 260424-u91 | Restructure project: remove unused files, reorganize into folders, improve visual structure | 2026-04-24 | 39bf4c7, 8595560, 63b2569 | [260424-u91](./quick/260424-u91-restructure-project-remove-unused-files/) |
+
 ---
 
 *State file created: 2026-04-24*
+*Last update: 2026-04-24 — Completed quick task 260424-u91: Project structure reorganization*
