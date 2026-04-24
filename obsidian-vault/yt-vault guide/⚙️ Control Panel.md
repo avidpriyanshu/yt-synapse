@@ -271,6 +271,125 @@ if (saveBtn) saveBtn.addEventListener('click', saveSettings);
 loadSettings();
 ```
 
+
+## Topic Filters
+
+Exclude words from being extracted as topics. Add words to prevent generic or irrelevant topics like "minutes", "first", "experience" from appearing in your vault.
+
+```dataviewjs
+dv.container.innerHTML = `
+<div style="padding: 1em; border: 1px solid var(--background-modifier-border); border-radius: 0.5em; background-color: var(--background-secondary);">
+  
+  <div style="margin-bottom: 1em;">
+    <div style="font-size: 0.9em; color: var(--text-muted); margin-bottom: 0.5em; font-weight: bold;">BLOCKED WORDS</div>
+    <div id="blacklist-tags" style="display: flex; flex-wrap: wrap; gap: 0.3em; margin-bottom: 1em; min-height: 2em;">
+      <span style="color: var(--text-muted); font-style: italic;">Loading...</span>
+    </div>
+  </div>
+  
+  <div style="display: flex; gap: 0.5em; margin-bottom: 1em;">
+    <input id="new-word-input" type="text" placeholder="Type a word to block" style="padding: 0.3em 0.5em; border: 1px solid var(--background-modifier-border); border-radius: 0.3em; background-color: var(--background-tertiary); flex: 1;" />
+    <button id="btn-add-word" style="padding: 0.3em 0.8em; cursor: pointer; background: var(--interactive-accent); color: white; border: none; border-radius: 0.3em; font-weight: bold;">+ Add</button>
+  </div>
+  
+  <div id="blacklist-message" style="padding: 0.5em; border-radius: 0.3em; display: none; font-weight: bold;"></div>
+  
+</div>
+`;
+
+const SERVICE_API = 'http://localhost:3000';
+const blacklistTagsDiv = dv.container.querySelector('#blacklist-tags');
+const newWordInput = dv.container.querySelector('#new-word-input');
+const addWordBtn = dv.container.querySelector('#btn-add-word');
+const blacklistMsg = dv.container.querySelector('#blacklist-message');
+
+function showBlacklistMessage(text, type) {
+  blacklistMsg.textContent = text;
+  blacklistMsg.style.display = 'block';
+  blacklistMsg.style.backgroundColor = type === 'success' ? 'var(--background-modifier-success)' : 'var(--background-modifier-error)';
+  blacklistMsg.style.color = type === 'success' ? 'var(--text-muted)' : 'white';
+  
+  setTimeout(() => {
+    blacklistMsg.style.display = 'none';
+  }, 3000);
+}
+
+async function loadBlacklist() {
+  try {
+    const res = await fetch(`${SERVICE_API}/blacklist`);
+    const data = await res.json();
+    
+    if (data.ok && data.words && data.words.length > 0) {
+      blacklistTagsDiv.innerHTML = data.words.map(word => `
+        <span style="display: inline-flex; align-items: center; gap: 0.3em; padding: 0.2em 0.5em; background: var(--background-tertiary); border-radius: 0.3em; font-size: 0.9em;">
+          ${word}
+          <button onclick="removeWord('${word}')" style="background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 0; margin: 0; font-weight: bold;">×</button>
+        </span>
+      `).join('');
+    } else {
+      blacklistTagsDiv.innerHTML = '<span style="color: var(--text-muted); font-style: italic;">No words blocked yet</span>';
+    }
+  } catch (err) {
+    blacklistTagsDiv.innerHTML = '<span style="color: var(--background-modifier-error);">Error loading blacklist</span>';
+  }
+}
+
+async function removeWord(word) {
+  try {
+    const res = await fetch(`${SERVICE_API}/blacklist/remove`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ word })
+    });
+    
+    const data = await res.json();
+    if (data.ok) {
+      showBlacklistMessage(`✓ Removed "${word}"`, 'success');
+      loadBlacklist();
+    } else {
+      showBlacklistMessage('✗ Failed to remove: ' + (data.error || 'unknown error'), 'error');
+    }
+  } catch (err) {
+    showBlacklistMessage('✗ Error: ' + err.message, 'error');
+  }
+}
+
+async function addWord() {
+  const word = newWordInput.value.trim();
+  if (!word) {
+    showBlacklistMessage('Enter a word first', 'error');
+    return;
+  }
+  
+  try {
+    const res = await fetch(`${SERVICE_API}/blacklist/add`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ word })
+    });
+    
+    const data = await res.json();
+    if (data.ok) {
+      newWordInput.value = '';
+      showBlacklistMessage(`✓ Added "${word}" to blacklist`, 'success');
+      loadBlacklist();
+    } else {
+      showBlacklistMessage('✗ Failed to add: ' + (data.error || 'unknown error'), 'error');
+    }
+  } catch (err) {
+    showBlacklistMessage('✗ Error: ' + err.message, 'error');
+  }
+}
+
+if (addWordBtn) {
+  addWordBtn.addEventListener('click', addWord);
+  newWordInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') addWord();
+  });
+}
+
+loadBlacklist();
+```
 ---
 
 ## How It Works

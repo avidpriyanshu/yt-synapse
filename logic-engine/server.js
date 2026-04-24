@@ -7,6 +7,7 @@ const fs = require('fs');
 const logger = require('./utils/logger.js');
 
 const CONFIG_PATH = path.join(__dirname, 'config', 'config.json');
+const BLACKLIST_PATH = path.join(__dirname, '..', '.planning', 'topic-blacklist.json');
 
 let runningProcess = null;
 let runningProcessPid = null;
@@ -120,6 +121,62 @@ function writeConfig(updates) {
 }
 
 /**
+ * Read topic blacklist
+ */
+function readBlacklist() {
+  try {
+    const data = JSON.parse(fs.readFileSync(BLACKLIST_PATH, 'utf-8'));
+    const words = Object.keys(data).filter(k => !k.startsWith('_')).sort();
+    return { ok: true, words };
+  } catch (err) {
+    logger.log('ERROR', 'BLACKLIST', 'Failed to read blacklist', err.message);
+    return { ok: false, words: [], error: err.message };
+  }
+}
+
+/**
+ * Add word to blacklist
+ */
+function addBlacklistWord(word) {
+  if (!word || typeof word !== 'string' || word.trim().length === 0) {
+    return { ok: false, error: 'Word cannot be empty' };
+  }
+
+  try {
+    const data = JSON.parse(fs.readFileSync(BLACKLIST_PATH, 'utf-8'));
+    const cleanWord = word.trim().toLowerCase();
+    data[cleanWord] = 'user-added';
+    fs.writeFileSync(BLACKLIST_PATH, JSON.stringify(data, null, 2));
+    logger.log('INFO', 'BLACKLIST', 'Added word', cleanWord);
+    return { ok: true };
+  } catch (err) {
+    logger.log('ERROR', 'BLACKLIST', 'Failed to add word', err.message);
+    return { ok: false, error: err.message };
+  }
+}
+
+/**
+ * Remove word from blacklist
+ */
+function removeBlacklistWord(word) {
+  if (!word || typeof word !== 'string' || word.trim().length === 0) {
+    return { ok: false, error: 'Word cannot be empty' };
+  }
+
+  try {
+    const data = JSON.parse(fs.readFileSync(BLACKLIST_PATH, 'utf-8'));
+    const cleanWord = word.trim().toLowerCase();
+    delete data[cleanWord];
+    fs.writeFileSync(BLACKLIST_PATH, JSON.stringify(data, null, 2));
+    logger.log('INFO', 'BLACKLIST', 'Removed word', cleanWord);
+    return { ok: true };
+  } catch (err) {
+    logger.log('ERROR', 'BLACKLIST', 'Failed to remove word', err.message);
+    return { ok: false, error: err.message };
+  }
+}
+
+/**
  * Parse JSON body from request
  */
 function parseJsonBody(req) {
@@ -179,6 +236,20 @@ async function handleRequest(req, res) {
   } else if (pathname === '/config' && req.method === 'POST') {
     const body = await parseJsonBody(req);
     const result = writeConfig(body);
+    res.writeHead(result.ok ? 200 : 400);
+    res.end(JSON.stringify(result));
+  } else if (pathname === '/blacklist' && req.method === 'GET') {
+    const result = readBlacklist();
+    res.writeHead(result.ok ? 200 : 400);
+    res.end(JSON.stringify(result));
+  } else if (pathname === '/blacklist/add' && req.method === 'POST') {
+    const body = await parseJsonBody(req);
+    const result = addBlacklistWord(body.word);
+    res.writeHead(result.ok ? 200 : 400);
+    res.end(JSON.stringify(result));
+  } else if (pathname === '/blacklist/remove' && req.method === 'POST') {
+    const body = await parseJsonBody(req);
+    const result = removeBlacklistWord(body.word);
     res.writeHead(result.ok ? 200 : 400);
     res.end(JSON.stringify(result));
   } else if (pathname === '/health' && req.method === 'GET') {

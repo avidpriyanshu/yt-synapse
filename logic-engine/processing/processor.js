@@ -5,21 +5,34 @@ const path = require('path');
 const ReviewAgent = require('../utils/reviewer.js');
 const logger = require('../utils/logger.js');
 
-/** Load external topic blacklist configuration */
-let topicBlacklist = new Set();
-try {
-  const blacklistPath = path.join(__dirname, '..', '..', '.planning', 'topic-blacklist.json');
-  const blacklistData = JSON.parse(fs.readFileSync(blacklistPath, 'utf-8'));
-  topicBlacklist = new Set(Object.keys(blacklistData).map(t => t.toLowerCase()));
-  logger.log('INFO', 'PROCESSOR', 'Loaded topic blacklist', `${topicBlacklist.size} terms`);
-} catch (e) {
-  logger.log('WARN', 'PROCESSOR', 'Failed to load topic blacklist', `Using defaults: ${e.message}`);
-  topicBlacklist = new Set([
-    'must', 'watch', 'insane', 'crazy', 'shocking', 'ultimate', 'best', 'worst',
-    'official', 'trailer', 'new', 'live', 'streaming', 'episode', 'full',
-    'video', 'update', 'the', 'you', 'and', 'for', 'are', 'that', 'this',
-    'one', 'can', 'get', 'almost', 'more', 'amazing', 'awesome',
-  ]);
+/** Cached topic blacklist with 60-second TTL */
+let _blacklistCache = null;
+let _blacklistLoadedAt = 0;
+
+function getBlacklist() {
+  const now = Date.now();
+  if (now - _blacklistLoadedAt < 60_000 && _blacklistCache) {
+    return _blacklistCache;
+  }
+
+  try {
+    const blacklistPath = path.join(__dirname, '..', '..', '.planning', 'topic-blacklist.json');
+    const blacklistData = JSON.parse(fs.readFileSync(blacklistPath, 'utf-8'));
+    _blacklistCache = new Set(Object.keys(blacklistData).map(t => t.toLowerCase()));
+    _blacklistLoadedAt = now;
+    logger.log('INFO', 'PROCESSOR', 'Reloaded topic blacklist', `${_blacklistCache.size} terms`);
+    return _blacklistCache;
+  } catch (e) {
+    logger.log('WARN', 'PROCESSOR', 'Failed to load topic blacklist', `Using defaults: ${e.message}`);
+    _blacklistCache = new Set([
+      'must', 'watch', 'insane', 'crazy', 'shocking', 'ultimate', 'best', 'worst',
+      'official', 'trailer', 'new', 'live', 'streaming', 'episode', 'full',
+      'video', 'update', 'the', 'you', 'and', 'for', 'are', 'that', 'this',
+      'one', 'can', 'get', 'almost', 'more', 'amazing', 'awesome',
+    ]);
+    _blacklistLoadedAt = now;
+    return _blacklistCache;
+  }
 }
 
 /** Load external topic remap configuration */
@@ -42,11 +55,29 @@ try {
 }
 
 const STOP_LABELS = new Set([
+  // Articles, pronouns, prepositions (original)
   'you', 'the', 'and', 'for', 'are', 'that', 'this', 'one', 'any',
   'only', 'then', 'there', 'your', 'from', 'into', 'when', 'what',
   'how', 'why', 'just', 'also', 'here', 'all', 'most', 'some', 'more',
   'less', 'much', 'many', 'too', 'very', 'even', 'still', 'yet', 'with',
   'but', 'or', 'in', 'on', 'at', 'by', 'to', 'a', 'an',
+  // Ordinals (appear capitalized but not topics)
+  'first', 'second', 'third', 'fourth', 'fifth', 'last', 'next',
+  // Time units (appear capitalized but not topics)
+  'minute', 'minutes', 'second', 'seconds', 'hour', 'hours', 'day', 'days',
+  'week', 'weeks', 'month', 'months', 'year', 'years',
+  // Generic skill/experience descriptors
+  'experience', 'beginner', 'simple', 'easy', 'hard', 'quick',
+  'basic', 'advanced', 'intermediate', 'complex',
+  // Comparative/evaluative adjectives (not topics)
+  'better', 'worse', 'different', 'perfect', 'wrong', 'right', 'good', 'bad',
+  // Generic tech/project nouns
+  'model', 'version', 'release', 'test', 'testing', 'tests',
+  'feature', 'features', 'setup', 'install', 'project', 'issue', 'issues',
+  // Common filler words in titles
+  'actually', 'literally', 'basically', 'finally', 'every', 'never',
+  'again', 'back', 'really', 'before', 'after', 'since', 'during',
+  'while', 'so', 'own', 'nothing', 'something', 'everything', 'anything',
 ]);
 
 function isPlausibleLabel(t) {
@@ -108,6 +139,7 @@ function extractCandidateTopics(title) {
 
   let t = stripBareYears(title);
   const found = [];
+  const blacklist = getBlacklist();
 
   /** @type {Map<string,string>} lowercase -> display */
   const seen = new Map();
@@ -120,7 +152,7 @@ function extractCandidateTopics(title) {
     let clean = stripPunctuation(phrase.trim());
     const low = clean.toLowerCase();
     // Skip if phrase contains any blacklisted words
-    if (!isPhraseTainted(clean) && !topicBlacklist.has(low)) {
+    if (!isPhraseTainted(clean) && !blacklist.has(low)) {
       seen.set(low, clean);
     }
   }
@@ -135,17 +167,18 @@ function extractCandidateTopics(title) {
     const isPartOfPhrase = Array.from(seen.values()).some(phrase =>
       phrase.toLowerCase().includes(low)
     );
-    if (!topicBlacklist.has(low) && !isPartOfPhrase) {
+    if (!blacklist.has(low) && !isPartOfPhrase) {
       seen.set(low, clean);
     }
   }
 
-  // Extract ALL CAPS tokens (likely acronyms), 2–10 chars
-  const acronyms = t.match(/\b[A-Z]{2,10}\b/g) || [];
+  // Extract ALL CAPS tokens (likely acronyms), 3–10 chars (min 3 to filter noise like IS, IT, AT)
+  const acronyms = t.match(/\b[A-Z]{3,10}\b/g) || [];
+  const blacklist = getBlacklist();
   for (const a of acronyms) {
     const clean = stripPunctuation(a);
     const low = clean.toLowerCase();
-    if (clean && !topicBlacklist.has(low)) {
+    if (clean && !blacklist.has(low)) {
       seen.set(low, clean);
     }
   }
@@ -164,7 +197,7 @@ function extractCandidateTopics(title) {
   return ReviewAgent.cleanTopics(found, {
     minLen: 3,
     maxTopics: 7,
-    blacklist: topicBlacklist,
+    blacklist,
   });
 }
 
@@ -179,6 +212,6 @@ module.exports = {
   extractCandidateTopics,
   topicsToWikiLinks,
   remapTopic,
-  topicBlacklist,
+  getBlacklist,
   topicRemap,
 };
