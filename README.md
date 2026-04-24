@@ -1,64 +1,112 @@
-# yt-synapse 🧠
+# YouTube Vault 🧠
 
-**Turn every YouTube video you watch into permanent, searchable knowledge.**
-
-Automatically extract videos from your favorite channels, organize them by topic, and build a knowledge graph in Obsidian. Then connect that knowledge to Claude, ChatGPT, or any AI to power your research, learning, and creative work.
+**Automatically collect YouTube videos from your favorite channels and organize them in your Obsidian vault as permanent, searchable knowledge.**
 
 ---
 
-## What is yt-synapse?
+## 🚀 Quick Start (2 Minutes)
 
-yt-synapse is a self-hosted YouTube intelligence pipeline that:
+```bash
+# 1. Clone the repo
+git clone https://github.com/yourusername/yt-vault
+cd yt-vault
 
-1. **Watches** a folder in your Obsidian vault for clipping instructions
-2. **Resolves** the YouTube channel, fetches its RSS feed, and pulls the latest videos
-3. **Generates** structured markdown notes with automatic topic extraction
-4. **Organizes** videos by channel, topic, and date—all as wikilinks in Obsidian
-5. **Syncs** everything into your vault as a searchable, AI-compatible knowledge base
+# 2. Run the installer (does everything)
+bash INSTALL.sh
 
-Think of it as your YouTube → Brain interface. Videos don't just disappear from your watch history—they become permanent, indexed knowledge you can search, link, and reason about.
+# 3. Done! Open your Obsidian vault
+# Service auto-starts and scraper begins
+```
 
----
-
-## Who is this for?
-
-- **Researchers** — systematically harvest video sources and cross-reference them
-- **Students** — turn educational YouTube channels into study notes and topic maps
-- **Content creators** — track inspiration and track what you've learned from other creators
-- **AI-powered thinkers** — attach your vault to Claude or ChatGPT to enhance your reasoning with video knowledge
-- **Knowledge workers** — build a personal Wikipedia from your favorite creators
+**That's it.** The service runs in the background. Open Obsidian → scraping starts automatically.
 
 ---
 
-## How it works
+## 📖 Table of Contents
+
+- [What Is It?](#what-is-it)
+- [How It Works](#how-it-works)
+- [Installation](#installation)
+- [Using Your Own Obsidian Vault](#using-your-own-obsidian-vault)
+- [Usage Guide](#usage-guide)
+- [Project Structure](#project-structure)
+- [Troubleshooting](#troubleshooting)
+- [Configuration](#configuration)
+- [Advanced](#advanced)
+- [Getting Help](#getting-help)
+
+---
+
+## What Is It?
+
+YouTube Vault is a **self-hosted system** that:
+
+✅ **Watches** your Obsidian vault for clipping instructions  
+✅ **Fetches** latest videos from YouTube channels  
+✅ **Processes** them: extracts metadata, topics, summaries  
+✅ **Organizes** everything as searchable notes in your vault  
+✅ **Runs automatically** in the background, 24/7  
+
+### Use Cases
+
+- 🎓 **Students** — Turn educational YouTube into study notes
+- 🔬 **Researchers** — Build a knowledge base from video sources
+- 🎬 **Content creators** — Track inspiration and learning
+- 🧠 **AI enthusiasts** — Attach vault to Claude/ChatGPT for enhanced reasoning
+- 📚 **Knowledge workers** — Build a personal Wikipedia from creators you follow
+
+---
+
+## How It Works
+
+### The Pipeline
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│ 1. Drop a clipping into obsidian-vault/clippings/        │
-│    (contains a YouTube URL or channel reference)         │
-└──────────────────────────────────────────────────────────┘
-                          ↓
-┌──────────────────────────────────────────────────────────┐
-│ 2. Node.js watcher detects the file                      │
-│    - Extracts video/channel ID                           │
-│    - Fetches RSS feed for that channel                   │
-│    - Pulls ~15 most recent videos                        │
-└──────────────────────────────────────────────────────────┘
-                          ↓
-┌──────────────────────────────────────────────────────────┐
-│ 3. Pipeline generates markdown notes                     │
-│    - Video note: title, source, channel, topics, date    │
-│    - Topic stubs: wikilinks to group videos              │
-│    - Channel page: index of all videos from creator      │
-└──────────────────────────────────────────────────────────┘
-                          ↓
-┌──────────────────────────────────────────────────────────┐
-│ 4. Everything appears in Obsidian                        │
-│    - Open the Bases view to see all scraped videos       │
-│    - Click channel names to see all videos from that     │
-│    - Explore topics to discover related videos           │
-│    - Use graph view to see connections                   │
-└──────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│ YOU: Drop YouTube URL in clippings folder                   │
+└─────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│ WATCHER: Detects new file, extracts channel ID              │
+└─────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│ SCRAPER: Fetches RSS feed, gets 15 latest videos            │
+└─────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│ PROCESSOR: Extracts metadata, topics, summaries              │
+└─────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│ GENERATOR: Creates markdown notes with wikilinks             │
+└─────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────┐
+│ OBSIDIAN: Notes appear organized by channel, topic, date    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 7-Layer Architecture
+
+```
+logic-engine/
+├── server.js               HTTP API (localhost:3000)
+├── core/                   Data ingestion
+│   ├── watcher.js         Monitors clippings folder
+│   ├── extractor.js       Parses YouTube URLs
+│   └── resolver.js        Fetches metadata
+├── processing/            Transformation pipeline
+│   └── processor.js       Processes & structures data
+├── utils/                 Helper functions
+│   ├── logger.js         Logging system
+│   ├── reviewer.js       Data validation
+│   ├── error-messages.js User-friendly errors
+│   └── topic-merger.js   Topic organization
+└── config/               Configuration
+    ├── config.json       App settings
+    ├── channels.json     Channel list
+    └── history.json      Processed videos log
 ```
 
 ---
@@ -67,217 +115,503 @@ Think of it as your YouTube → Brain interface. Videos don't just disappear fro
 
 ### Prerequisites
 
-- **Node.js** 18+ ([install here](https://nodejs.org))
-- **Obsidian** (free, [download here](https://obsidian.md))
-- A YouTube channel URL (from the video you want to track)
+- **macOS** or **Linux** (Windows: WSL2)
+- **Node.js** 18+ ([download](https://nodejs.org))
+- **Obsidian** ([download](https://obsidian.md))
+- **Git**
 
-### 1. Clone the repo
+### Automated Installation (Recommended)
 
 ```bash
-git clone https://github.com/yourusername/yt-synapse.git
-cd yt-synapse
+bash INSTALL.sh
 ```
 
-### 2. Install dependencies
+This script:
+- ✓ Checks for Node.js (installs if missing via Homebrew)
+- ✓ Installs npm dependencies
+- ✓ Sets up PM2 (background process manager)
+- ✓ Starts the service
+- ✓ Enables auto-start on system boot
+
+**After installation:** Restart your Mac (recommended), then open Obsidian.
+
+### Manual Installation
 
 ```bash
+# 1. Install Node.js from https://nodejs.org (if not installed)
+
+# 2. Install dependencies
 cd logic-engine
 npm install
 cd ..
-```
 
-### 3. (Optional) Point to your vault
+# 3. Install PM2 globally
+npm install -g pm2
 
-If your Obsidian vault is in a different location, set the `VAULT_ROOT` environment variable:
-
-```bash
-export VAULT_ROOT=/path/to/your/obsidian/vault
-```
-
-By default, it points to `obsidian-vault/` in this repo.
-
-### 4. Start the watcher
-
-```bash
+# 4. Start the service
 cd logic-engine
-node main.js
+npm run pm2-start
+
+# 5. Enable auto-start on boot
+npm run pm2-setup-autoboot
 ```
 
-Leave this running in a terminal. It watches `obsidian-vault/clippings/` for new markdown files.
+### Verify Installation
+
+```bash
+# Check if service is running
+pm2 status
+
+# View logs
+pm2 logs yt-vault-service
+
+# You should see the service listed as "online"
+```
 
 ---
 
-## Usage
+## Using Your Own Obsidian Vault
 
-### Basic workflow
+**Most users already have an Obsidian vault. Here's how to use it with YouTube Vault:**
 
-1. **Create a clipping file** in `obsidian-vault/clippings/` with a YouTube URL in the frontmatter:
+### Option 1: Use Your Existing Vault (Recommended)
 
-   **Example:** `clippings/awesome-channel.md`
-   ```markdown
-   ---
-   source: https://www.youtube.com/watch?v=dQw4w9WgXcQ
-   ---
+```bash
+# 1. After running INSTALL.sh, open config.json
+nano logic-engine/config/config.json
 
-   Notes about this video or channel...
+# 2. (Optional) Add your vault path for reference
+# Note: The watcher will look in the VAULT_ROOT environment variable
+
+# 3. Set the environment variable to point to YOUR vault
+export VAULT_ROOT=/path/to/your/obsidian/vault
+
+# 4. Restart the service
+pm2 restart yt-vault-service
+```
+
+### Option 2: Tell the Service About Your Vault
+
+The service automatically looks for a `clippings/` folder in your vault to watch.
+
+**Set up your vault structure:**
+
+```
+your-obsidian-vault/
+├── clippings/           ← Drop YouTube URLs here
+├── videos/              ← OUTPUT: Generated video notes
+├── topics/              ← OUTPUT: Topic indexes
+├── channels/            ← OUTPUT: Channel pages
+└── [your other folders]
+```
+
+**To point service to your vault (macOS/Linux):**
+
+Edit your shell profile file (~/.zshrc or ~/.bash_profile):
+
+```bash
+# Add this line at the end
+export VAULT_ROOT="/Users/yourname/Documents/My-Obsidian-Vault"
+```
+
+Then reload:
+```bash
+source ~/.zshrc
+# or
+source ~/.bash_profile
+```
+
+Restart the service:
+```bash
+pm2 restart yt-vault-service
+```
+
+### Option 3: Copy the Included Vault to Your Location
+
+```bash
+# Copy the included vault to your preferred location
+cp -r obsidian-vault /path/to/your/vaults/yt-vault
+
+# Set environment variable (see Option 2 above)
+export VAULT_ROOT="/path/to/your/vaults/yt-vault"
+
+# Restart service
+pm2 restart yt-vault-service
+```
+
+### Verify It's Working
+
+1. Open your Obsidian vault
+2. Navigate to: `clippings/` folder
+3. Create a new file with a YouTube URL:
    ```
-
-2. **Save the file.** The watcher detects it automatically.
-
-3. **Check your vault.** New video notes appear in `obsidian-vault/videos/`:
-   - Each video gets a markdown file with title, channel, topics, and publish date
-   - The channel gets its own index page in `channels/`
-   - New topics are created as wikilinks
-
-4. **Explore in Obsidian:**
-   - Open the **Bases** view to see all videos in a table
-   - Click a **channel name** to see all videos from that creator
-   - Click a **topic** to see all videos tagged with that theme
-   - Use **Graph View** to see the knowledge network
-
-### File structure
-
-```
-obsidian-vault/
-├── clippings/              ← Drop your clipping files here
-├── videos/                 ← Generated video notes (auto)
-├── topics/                 ← Generated topic index pages (auto)
-├── channels/               ← Generated channel index pages (auto)
-├── Bases/
-│   └── scrapedVideos.base  ← Table view of all videos
-├── Dashboard.md            ← Quick access to views
-└── .obsidian/              ← Obsidian config (includes Dataview plugin)
-```
+   https://www.youtube.com/@LinusTeachTech
+   ```
+4. Save it
+5. Wait 5-10 seconds
+6. Check `videos/` folder — new video notes should appear
 
 ---
 
-## Frontmatter fields
+## Usage Guide
 
-Every generated video note has:
+### For End Users
 
-| Field | Example | Purpose |
-|-------|---------|---------|
-| `title` | "Why I Left Google" | Video title |
-| `source` | "https://youtube.com/watch?v=..." | YouTube URL |
-| `channel` | `[[channels/My Creator]]` | Wikilink to channel page |
-| `channel_id` | `UCxxxxxxxxxxxxxx` | YouTube channel ID (for reference) |
-| `video_id` | `dQw4w9WgXcQ` | YouTube video ID (11 chars) |
-| `topics` | `[[AI]], [[Ethics]]` | Auto-extracted topics |
-| `date` | `2025-03-15` | Publish date |
-| `type` | `video` | Document type (used for filtering) |
-| `tags` | `youtube/video` | Tag for Bases filtering |
+#### 1. Add a YouTube Channel
 
----
+In your Obsidian vault, go to: **clippings/** folder
 
-## Future use cases
-
-### AI-powered research
-
-**Attach your vault to Claude or ChatGPT:**
-
-Copy your `obsidian-vault/` and feed it to Claude's file upload or ChatGPT's plugin:
-
+Create a new note with just the YouTube channel URL:
 ```
-Me: "I've uploaded my YouTube vault. Summarize all videos 
-about AI safety and highlight the key arguments."
-
-Claude: Analyzes your vault and returns a synthesis of your 
-video knowledge, complete with source links.
+https://www.youtube.com/@ChannelName
 ```
 
-This turns your personal video library into an AI-augmented knowledge base.
+Save it. The scraper will automatically:
+- Detect the new file
+- Fetch all recent videos from that channel
+- Create organized notes in `videos/`
+- Create topic pages in `topics/`
+- Create a channel index in `channels/`
 
-### Automatic topic mapping
+#### 2. Control the Scraper
 
-Future versions will use NLP to:
-- Smarten topic extraction (avoid fragments and noise)
-- Suggest topic merges ("Machine Learning" ← "ML" ← "Deep Learning")
-- Build topic hierarchies (Philosophy > Ethics > AI Ethics)
-- Auto-tag videos based on transcript analysis
+Open the **99-Service-Controls** page in your vault (if using included vault):
 
-### Cross-vault knowledge graphs
+- **▶ Start Scraping** — Begin collecting
+- **⏹ Stop Scraping** — Pause collection
+- **📋 View Logs** — See activity
+- **Status** — Shows 🟢 Running or 🔴 Stopped
 
-Link your yt-synapse vault to other Obsidian vaults:
-- Connect videos to your book notes
-- Relate channels to the authors/researchers who created them
-- Build a knowledge graph across all your learning sources
+Or use terminal:
+```bash
+pm2 start yt-vault-service     # Start
+pm2 stop yt-vault-service      # Stop
+pm2 logs yt-vault-service      # View logs
+```
 
-### Transcript ingestion
+#### 3. Explore Your Vault
 
-Use YouTube's auto-generated transcripts (via the YouTube API) to:
-- Index searchable content from videos
-- Extract time-stamped quotes
-- Find specific moments across your library
+Use Obsidian features:
+- **Graph view** — See connections between videos & topics
+- **Search** — Find videos by channel, topic, or keyword
+- **Bases view** — See all videos in a table
+- **Dataview** — Create custom queries
 
-### Readwise-style review
+### For Developers
 
-Implement scheduled "review" prompts:
-- "Here are 3 random videos you saved. Any new insights?"
-- Spaced repetition for video knowledge
-- Export highlights from videos you annotated
+Modify the scraper in `logic-engine/`:
+
+```bash
+# Edit a file
+nano logic-engine/utils/topic-merger.js
+
+# Restart to apply changes
+pm2 restart yt-vault-service
+
+# View logs to check for errors
+pm2 logs yt-vault-service
+```
+
+Key files:
+- `core/watcher.js` — Monitors clippings folder
+- `core/extractor.js` — Parses YouTube URLs
+- `processing/processor.js` — Processes video data
+- `utils/generator.js` — Creates markdown notes
 
 ---
 
-## How to contribute
+## Project Structure
 
-This project is open source and welcomes contributions:
-
-1. **Fork** the repo
-2. **Create a branch** for your feature (`git checkout -b feature/smarter-topics`)
-3. **Make changes** and test thoroughly
-4. **Submit a PR** with a clear description of what you changed and why
-
-### Areas we need help with:
-
-- Improving topic extraction (better NLP, smarter deduplication)
-- Adding transcript support
-- Building UI for better visualization
-- Docker support for easier deployment
-- Tests and CI/CD
-
----
-
-## Roadmap
-
-- [ ] Smart topic extraction (transcript-based, AI-assisted)
-- [ ] Scheduled transcript sync from YouTube API
-- [ ] Dataview dashboard with insights (videos per channel, top topics, etc.)
-- [ ] Export to Roam Research, Logseq, and other tools
-- [ ] Mobile app for adding clips
-- [ ] Integration with Readwise for spaced repetition
-- [ ] API endpoint for external tools
-- [ ] Web UI for browsing your vault
+```
+yt-vault/
+├── README.md                    # This file
+├── QUICKSTART.md                # 2-minute quick start
+├── INSTALL.sh                   # One-command installer
+│
+├── logic-engine/                # Node.js service
+│   ├── server.js                # HTTP API
+│   ├── main.js                  # Scraper entry point
+│   ├── package.json             # Dependencies
+│   ├── ecosystem.config.js      # PM2 config
+│   ├── core/                    # Data ingestion
+│   ├── processing/              # Data transformation
+│   ├── utils/                   # Helpers
+│   ├── config/                  # Settings
+│   └── scripts/                 # Utilities
+│
+├── obsidian-vault/              # Included example vault
+│   ├── 99-Service-Controls.md   # Control panel
+│   ├── clippings/               # INPUT: Drop URLs here
+│   ├── videos/                  # OUTPUT: Generated notes
+│   ├── topics/                  # OUTPUT: Topic indexes
+│   └── channels/                # OUTPUT: Channel pages
+│
+└── .planning/                   # Development docs (ignore)
+```
 
 ---
 
 ## Troubleshooting
 
-### "No channel ID found"
-The YouTube channel wasn't resolvable. Try:
-- Check the URL is a valid YouTube watch page
-- Wait 30 seconds and re-try (rate limiting)
+### "Service unavailable" in Obsidian
 
-### "Videos aren't appearing in Obsidian"
-1. Check that `VAULT_ROOT` points to the correct vault
-2. Verify the watcher is still running (check the terminal)
-3. Check `logic-engine/logs/` for error messages
-4. Reload Obsidian (Cmd/Ctrl+R or restart the app)
+```bash
+# Check if service is running
+pm2 status
 
-### "Topics are weird/noisy"
-Topic extraction uses heuristics and will improve over time. For now:
-- You can manually edit topic files in `topics/`
-- We're working on smarter extraction for the next release
+# If not, start it
+pm2 start yt-vault-service
+
+# Check for errors
+pm2 logs yt-vault-service
+```
+
+### Service crashes immediately
+
+```bash
+# Install missing dependencies
+cd logic-engine
+npm install
+
+# Start service
+npm run pm2-start
+```
+
+### Videos not appearing
+
+1. Is the scraper running? Check: `pm2 status`
+2. Did you create a file in `clippings/` with a YouTube URL?
+3. Check logs: `pm2 logs yt-vault-service`
+
+Common issues:
+- YouTube API rate limit (wait a few hours)
+- Network error (check internet connection)
+- Invalid URL format (must be a full YouTube channel URL)
+
+### Service stops after a few seconds
+
+```bash
+pm2 logs yt-vault-service
+```
+
+Look at error messages. Common causes:
+- Missing config.json
+- Invalid JSON in config
+- Wrong vault path
+- Port 3000 already in use
+
+### "Cannot find module 'chokidar'"
+
+```bash
+cd logic-engine
+npm install
+```
 
 ---
 
-## License
+## Configuration
 
-MIT. You're free to use, modify, and distribute this however you want.
+### config.json
+
+Location: `logic-engine/config/config.json`
+
+```json
+{
+  "autoStartScraper": true,
+  "loggingLevel": "INFO"
+}
+```
+
+| Setting | Options | Meaning |
+|---------|---------|---------|
+| `autoStartScraper` | `true`/`false` | Auto-start when Obsidian opens |
+| `loggingLevel` | `INFO`/`WARN`/`ERROR` | How much logging to show |
+
+### Setting Vault Path
+
+```bash
+# macOS/Linux: Add to ~/.zshrc or ~/.bash_profile
+export VAULT_ROOT="/path/to/your/obsidian/vault"
+
+# Then reload
+source ~/.zshrc
+
+# Restart service
+pm2 restart yt-vault-service
+```
+
+### PM2 Settings
+
+`logic-engine/ecosystem.config.js` controls:
+- How service starts/restarts
+- Log file locations
+- Auto-boot behavior
+
+Only edit if you know what you're doing.
 
 ---
 
-## Questions?
+## Advanced
 
-[Open an issue](https://github.com/yourusername/yt-synapse/issues) or reach out.
+### Using the REST API
 
-**Happy learning!** 🎥📚
+```bash
+# Check status
+curl http://localhost:3000/status
+
+# Get config
+curl http://localhost:3000/config
+
+# Start scraper
+curl -X POST http://localhost:3000/start
+
+# Stop scraper
+curl -X POST http://localhost:3000/stop
+
+# Get logs
+curl http://localhost:3000/logs
+
+# Health check
+curl http://localhost:3000/health
+```
+
+### Extending the Scraper
+
+Want to add features? Modify `logic-engine/`:
+
+1. **Add new metadata** — Edit `processor.js`
+2. **Change note generation** — Edit `generator.js`
+3. **Modify topics** — Edit `topic-merger.js`
+4. **Add logging** — Use `logger.js`
+
+After changes:
+```bash
+pm2 restart yt-vault-service
+```
+
+### Performance Tuning
+
+If scraper is slow:
+- Increase timeout in `core/resolver.js`
+- Reduce videos fetched (default: 15)
+- Change logging to `WARN` instead of `INFO`
+
+---
+
+## Getting Help
+
+### 1. Check Logs
+
+```bash
+pm2 logs yt-vault-service
+```
+
+Error messages here explain what's wrong.
+
+### 2. Ask an AI for Help
+
+Copy this prompt into Claude or ChatGPT to get contextual help:
+
+```
+You are helping me with YouTube Vault, a YouTube video scraper for Obsidian.
+
+Core components:
+- logic-engine/ — Node.js service that runs on localhost:3000
+- obsidian-vault/ — Example Obsidian vault structure
+- PM2 — Background process manager
+
+The system:
+1. Watches clippings/ folder in Obsidian vault
+2. When new YouTube URL is added, scraper fetches videos
+3. Processes them and creates markdown notes
+4. Notes appear in videos/, topics/, and channels/ folders
+
+Key commands:
+- pm2 status (check if running)
+- pm2 logs yt-vault-service (view logs)
+- pm2 restart yt-vault-service (restart)
+- bash INSTALL.sh (install everything)
+
+My issue: [DESCRIBE YOUR PROBLEM HERE]
+```
+
+### 3. Manual Debugging
+
+```bash
+# Verify prerequisites
+node -v                          # Should show v18+
+npm -v                           # Should show version
+pm2 -v                           # Should show version
+
+# Check service status
+pm2 status
+
+# Check if port 3000 is in use
+lsof -i :3000
+
+# Restart everything
+pm2 restart yt-vault-service
+
+# Clean reinstall
+pm2 delete yt-vault-service
+cd logic-engine
+rm -rf node_modules
+npm install
+npm run pm2-start
+```
+
+### 4. Common Issues
+
+| Issue | Fix |
+|-------|-----|
+| "Service unavailable" | `pm2 restart yt-vault-service` |
+| "Cannot find module" | `cd logic-engine && npm install` |
+| Service crashes | `pm2 logs yt-vault-service` and check errors |
+| Videos not appearing | Check `clippings/` has a valid YouTube URL |
+| Port 3000 in use | `lsof -i :3000` and kill the process |
+| Wrong vault path | Set `VAULT_ROOT` environment variable |
+
+---
+
+## What Gets Installed
+
+### Node.js Packages (logic-engine/)
+
+- **chokidar** — File watching
+- **gray-matter** — YAML parsing
+- **rss-parser** — RSS feed parsing
+
+### System Tools
+
+- **PM2** — Process manager (installed globally)
+- **Node.js** — JavaScript runtime (if not present)
+
+---
+
+## Summary
+
+| Task | Command |
+|------|---------|
+| **Install** | `bash INSTALL.sh` |
+| **Start service** | `pm2 start yt-vault-service` |
+| **Stop service** | `pm2 stop yt-vault-service` |
+| **View logs** | `pm2 logs yt-vault-service` |
+| **Restart service** | `pm2 restart yt-vault-service` |
+| **Check status** | `pm2 status` |
+| **Add custom vault** | Set `VAULT_ROOT` environment variable |
+
+---
+
+## Next Steps
+
+1. **Clone repo** — `git clone <url> && cd yt-vault`
+2. **Install** — `bash INSTALL.sh`
+3. **Set vault path** (if using existing vault) — `export VAULT_ROOT="/path/to/vault"`
+4. **Add a channel** — Drop YouTube URL in `clippings/` folder
+5. **Watch it work** — Videos appear in vault automatically
+
+---
+
+**Questions?** Check logs, then ask an AI assistant (see "Getting Help" section above).
+
+**Ready to start?** Run `bash INSTALL.sh` and enjoy! 🚀

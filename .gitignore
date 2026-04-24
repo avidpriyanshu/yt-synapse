@@ -38,5 +38,21 @@ obsidian-vault/.obsidian/plugins/
 # obsidian-vault/channels/
 # obsidian-vault/clippings/
 
-# Planning trash (archived/deleted artifacts)
-.planning/.trash/
+# Planning and development (private docs)
+.planning/
+.claude/
+.cursor/
+.agents/
+.caliber/
+
+# Private files
+CLAUDE.md
+DEBUG_NOTES.txt
+DEVELOPER_NOTES.md
+COMPLETE_GUIDE.md
+LLM_ASSISTANT.md
+SETUP_GUIDE.md
+
+# History and caches
+.claude_history/
+.cursor_history/
