@@ -174,7 +174,6 @@ function extractCandidateTopics(title) {
 
   // Extract ALL CAPS tokens (likely acronyms), 3–10 chars (min 3 to filter noise like IS, IT, AT)
   const acronyms = t.match(/\b[A-Z]{3,10}\b/g) || [];
-  const blacklist = getBlacklist();
   for (const a of acronyms) {
     const clean = stripPunctuation(a);
     const low = clean.toLowerCase();
