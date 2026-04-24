@@ -162,6 +162,28 @@ function escapeYamlString(s) {
   return `"${t}"`;
 }
 
+/**
+ * Format view count with comma separators.
+ * @param {number} count - View count
+ * @returns {string} Formatted view count (e.g., "1,234,567")
+ */
+function formatViewCount(count) {
+  if (count == null || isNaN(count)) return '—';
+  return count.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+/**
+ * Format duration from seconds to MM:SS format.
+ * @param {number} seconds - Duration in seconds
+ * @returns {string} Formatted duration (e.g., "12:34")
+ */
+function formatDuration(seconds) {
+  if (seconds == null || isNaN(seconds) || seconds < 0) return '—';
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${String(secs).padStart(2, '0')}`;
+}
+
 function buildVideoMarkdown({
   title,
   source,
@@ -170,6 +192,8 @@ function buildVideoMarkdown({
   videoId,
   topicLabels,
   pubDate,
+  duration,
+  viewCount,
 }) {
   const yamlTopics = topicLabels.map((t) => `  - "[[${t.replace(/"/g, '\\"')}]]"`);
   const topicLinksLine = topicLabels.map((t) => `[[${t}]]`).join(' ');
@@ -183,12 +207,18 @@ function buildVideoMarkdown({
   // Channel name (plain text for YAML) + wikilink in body
   const channelWikilink = `[[${channelTitle}]]`;
 
+  // Format metadata for display
+  const durationDisplay = formatDuration(duration);
+  const viewCountDisplay = formatViewCount(viewCount);
+
   return `---
 title: ${escapeYamlString(title)}
 source: ${escapeYamlString(source)}
 channel: ${escapeYamlString(channelTitle)}
 channel_id: ${channelId}
 video_id: ${videoId}
+duration: ${duration || null}
+view_count: ${viewCount || null}
 topics:${topicsYaml}
 date: ${dateLine}
 type: video
@@ -198,12 +228,20 @@ tags:
 
 # ${title}
 
+![thumbnail](https://img.youtube.com/vi/${videoId}/hqdefault.jpg)
+
 **Channel:** ${channelWikilink}
 **Published:** ${pubDate || dateLine}
+**Duration:** ${durationDisplay}
+**Views:** ${viewCountDisplay}
 
 ## Topics
 
 ${topicLinksLine || '_No extracted topics_'}
+
+## Transcript
+
+_User-fillable. Paste or summarize transcript here._
 
 ## Notes
 
@@ -338,6 +376,8 @@ async function processClipping(absPath) {
       videoId: it.videoId,
       topicLabels: topics,
       pubDate: it.pubDate,
+      duration: it.duration || null,
+      viewCount: it.viewCount || null,
     });
 
     fs.writeFileSync(videoPath, md, 'utf8');
