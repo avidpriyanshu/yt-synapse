@@ -37,3 +37,6 @@ obsidian-vault/.obsidian/plugins/
 # obsidian-vault/topics/
 # obsidian-vault/channels/
 # obsidian-vault/clippings/
+
+# Planning trash (archived/deleted artifacts)
+.planning/.trash/
