@@ -545,6 +545,23 @@ if (require.main === module) {
     process.exit(0);
   }
 
+  // Handle history reset
+  if (args[0] === '--reset-history') {
+    const historyPath = path.join(__dirname, 'config', 'history.json');
+    const backup = path.join(__dirname, 'config', 'history.json.backup');
+    try {
+      if (fs.existsSync(historyPath)) {
+        fs.copyFileSync(historyPath, backup);
+        console.log(`✓ Backup created: ${backup}`);
+      }
+      fs.writeFileSync(historyPath, JSON.stringify({ videoIds: [] }, null, 2));
+      console.log('✓ History cleared. Scraper will reprocess all videos.');
+      process.exit(0);
+    } catch (err) {
+      console.error('✗ Failed to reset history:', err.message);
+      process.exit(1);
+    }
+  }
   // Handle duplicate detection
   else if (args[0] === '--find-duplicate-topics') {
     const TopicMerger = require('./utils/topic-merger.js');

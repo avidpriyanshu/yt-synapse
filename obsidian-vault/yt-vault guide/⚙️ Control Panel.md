@@ -391,7 +391,7 @@ if (addWordBtn) {
 loadBlacklist();
 ```
 
-	## Recent Topics
+## Recent Topics
 
 ```dataviewjs
 dv.container.innerHTML = `
@@ -466,6 +466,69 @@ async function loadTopics() {
 }
 
 loadTopics();
+```
+
+## Advanced
+
+```dataviewjs
+dv.container.innerHTML = `
+<div style="padding: 1em; border: 1px solid var(--background-modifier-border); border-radius: 0.5em; background-color: var(--background-secondary);">
+  
+  <div style="margin-bottom: 1em;">
+    <div style="font-size: 0.9em; color: var(--text-muted); margin-bottom: 0.5em; font-weight: bold;">RESET PROCESSING HISTORY</div>
+    <p style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 0.8em;">Clear the scraper's memory of processed videos. This will cause all videos to be re-scraped and new clippings created. A backup will be saved.</p>
+    <button id="btn-reset-history" style="padding: 0.5em 1em; cursor: pointer; background: var(--background-modifier-error); color: white; border: none; border-radius: 0.3em; font-weight: bold;">
+      🔄 Reset History
+    </button>
+  </div>
+  
+  <div id="reset-message" style="padding: 0.5em; border-radius: 0.3em; margin-top: 0.5em; display: none; font-weight: bold;"></div>
+  
+</div>
+`;
+
+const SERVICE_API = 'http://localhost:3000';
+const resetBtn = dv.container.querySelector('#btn-reset-history');
+const resetMsg = dv.container.querySelector('#reset-message');
+
+function showResetMessage(text, type) {
+  resetMsg.textContent = text;
+  resetMsg.style.display = 'block';
+  resetMsg.style.backgroundColor = type === 'success' ? 'var(--background-modifier-success)' : 'var(--background-modifier-error)';
+  resetMsg.style.color = type === 'success' ? 'var(--text-muted)' : 'white';
+  
+  setTimeout(() => {
+    resetMsg.style.display = 'none';
+  }, 4000);
+}
+
+async function resetHistory() {
+  if (!confirm('Are you sure? This will mark all videos for re-scraping.')) {
+    return;
+  }
+  
+  try {
+    const res = await fetch(SERVICE_API + '/history/reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    const data = await res.json();
+    if (data.ok) {
+      showResetMessage('✓ ' + data.message, 'success');
+      resetBtn.disabled = true;
+      resetBtn.textContent = '✓ History Reset';
+    } else {
+      showResetMessage('✗ Failed: ' + (data.error || 'unknown error'), 'error');
+    }
+  } catch (err) {
+    showResetMessage('✗ Error: ' + err.message, 'error');
+  }
+}
+
+if (resetBtn) {
+  resetBtn.addEventListener('click', resetHistory);
+}
 ```
 
 ---

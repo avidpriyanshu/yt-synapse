@@ -9,6 +9,7 @@ const { scoreTopicQuality } = require('./processing/processor.js');
 
 const CONFIG_PATH = path.join(__dirname, 'config', 'config.json');
 const BLACKLIST_PATH = path.join(__dirname, '..', '.planning', 'topic-blacklist.json');
+const HISTORY_PATH = path.join(__dirname, 'config', 'history.json');
 
 let runningProcess = null;
 let runningProcessPid = null;
@@ -178,6 +179,24 @@ function removeBlacklistWord(word) {
 }
 
 /**
+ * Reset video processing history
+ */
+function resetHistory() {
+  try {
+    const backup = path.join(__dirname, 'config', 'history.json.backup');
+    if (fs.existsSync(HISTORY_PATH)) {
+      fs.copyFileSync(HISTORY_PATH, backup);
+    }
+    fs.writeFileSync(HISTORY_PATH, JSON.stringify({ videoIds: [] }, null, 2));
+    logger.log('INFO', 'HISTORY', 'History reset', 'all video IDs cleared');
+    return { ok: true, message: 'History cleared. Scraper will reprocess all videos.' };
+  } catch (err) {
+    logger.log('ERROR', 'HISTORY', 'Failed to reset history', err.message);
+    return { ok: false, error: err.message };
+  }
+}
+
+/**
  * Get topics from the last 24 hours with quality scores
  */
 function getRecentTopics() {
@@ -311,6 +330,10 @@ async function handleRequest(req, res) {
     res.end(JSON.stringify(result));
   } else if (pathname === '/topics/recent' && req.method === 'GET') {
     const result = getRecentTopics();
+    res.writeHead(result.ok ? 200 : 400);
+    res.end(JSON.stringify(result));
+  } else if (pathname === '/history/reset' && req.method === 'POST') {
+    const result = resetHistory();
     res.writeHead(result.ok ? 200 : 400);
     res.end(JSON.stringify(result));
   } else if (pathname === '/health' && req.method === 'GET') {
