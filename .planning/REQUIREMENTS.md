@@ -14,10 +14,10 @@
 - [x] **DASH-04**: User can discover videos by creator via auto-generated channel pages
 
 ### Channel Management (CHAN)
-- [ ] **CHAN-01**: System auto-generates one page per unique YouTube channel
-- [ ] **CHAN-02**: User can assign tags/categories to channels (e.g., "Tech", "Education", "Entertainment")
-- [ ] **CHAN-03**: User can filter/browse videos by channel category
-- [ ] **CHAN-04**: Channel page displays all videos from that creator in chronological order
+- [x] **CHAN-01**: System auto-generates one page per unique YouTube channel
+- [x] **CHAN-02**: User can assign tags/categories to channels (e.g., "Tech", "Education", "Entertainment")
+- [x] **CHAN-03**: User can filter/browse videos by channel category
+- [x] **CHAN-04**: Channel page displays all videos from that creator in chronological order
 
 ### Topic Quality (TOPIC)
 - [ ] **TOPIC-01**: System replaces compromise NLP library with higher-quality alternative
