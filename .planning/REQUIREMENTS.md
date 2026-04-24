@@ -26,11 +26,11 @@
 - [ ] **TOPIC-04**: Topic blacklist is configurable (no hardcoded terms)
 
 ### Service & Operations (SVC)
-- [ ] **SVC-01**: User can enable/disable scraper via UI toggle (no manual Node.js start required)
-- [ ] **SVC-02**: User can view real-time logs of successful scrapes (video added, topics created)
-- [ ] **SVC-03**: User can view failed scrapes with error details (why video was skipped)
-- [ ] **SVC-04**: System auto-starts scraper on vault open (optional, toggle-able)
-- [ ] **SVC-05**: System logs scrapes to daily log file with timestamps and status
+- [x] **SVC-01**: User can enable/disable scraper via UI toggle (no manual Node.js start required)
+- [x] **SVC-02**: User can view real-time logs of successful scrapes (video added, topics created)
+- [x] **SVC-03**: User can view failed scrapes with error details (why video was skipped)
+- [x] **SVC-04**: System auto-starts scraper on vault open (optional, toggle-able)
+- [x] **SVC-05**: System logs scrapes to daily log file with timestamps and status
 
 ### Accessibility (A11Y)
 - [ ] **A11Y-01**: Non-technical user can set up scraper without editing configuration files
@@ -68,11 +68,11 @@
 | Phase | Requirements | Status |
 |-------|--------------|--------|
 | 1 | TMPL-01, TMPL-02, TMPL-03 | ✅ Complete |
-| 2 | DASH-01, DASH-02, DASH-03, DASH-04 |
-| 3 | CHAN-01, CHAN-02, CHAN-03, CHAN-04 |
-| 4 | TOPIC-01, TOPIC-02, TOPIC-03, TOPIC-04 |
-| 5 | SVC-01, SVC-02, SVC-03, SVC-04, SVC-05 |
-| 6 | A11Y-01, A11Y-02, A11Y-03, A11Y-04 |
+| 2 | DASH-01, DASH-02, DASH-03, DASH-04 | ✅ Complete |
+| 3 | CHAN-01, CHAN-02, CHAN-03, CHAN-04 | ✅ Complete |
+| 4 | TOPIC-01, TOPIC-02, TOPIC-03, TOPIC-04 | In Progress |
+| 5 | SVC-01, SVC-02, SVC-03, SVC-04, SVC-05 | ✅ Complete |
+| 6 | A11Y-01, A11Y-02, A11Y-03, A11Y-04 | Pending |
 
 ---
 

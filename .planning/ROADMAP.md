@@ -10,7 +10,7 @@
 | 2 | Dashboard & Discovery | Build searchable Bases dashboard for video discovery | DASH-01, DASH-02, DASH-03, DASH-04 | 4 | ✅ |
 | 3 | Channel Management | Auto-generate channel pages with categorization | CHAN-01, CHAN-02, CHAN-03, CHAN-04 | 4 | ✅ |
 | 4 | Topic Quality | Replace NLP library and fix topic extraction | TOPIC-01, TOPIC-02, TOPIC-03, TOPIC-04 | 4 | ⧗ |
-| 5 | Service & Operations | Add service mode with logging and UI controls | SVC-01, SVC-02, SVC-03, SVC-04, SVC-05 | 5 | ⧗ |
+| 5 | Service & Operations | Add service mode with logging and UI controls | SVC-01, SVC-02, SVC-03, SVC-04, SVC-05 | 5 | ✅ |
 | 6 | Accessibility | Make system user-friendly for non-technical users | A11Y-01, A11Y-02, A11Y-03, A11Y-04 | 4 | ⧗ |
 
 ---
