@@ -3,9 +3,9 @@
 ## Active Requirements
 
 ### Templates (TMPL)
-- [ ] **TMPL-01**: User can view YouTube video thumbnail in clipped notes (hqdefault.jpg URL formula)
-- [ ] **TMPL-02**: User can see transcript section in video notes (empty by default, user-fillable)
-- [ ] **TMPL-03**: User can view enhanced video metadata (duration, view count, publish date)
+- [x] **TMPL-01**: User can view YouTube video thumbnail in clipped notes (hqdefault.jpg URL formula)
+- [x] **TMPL-02**: User can see transcript section in video notes (empty by default, user-fillable)
+- [x] **TMPL-03**: User can view enhanced video metadata (duration, view count, publish date)
 
 ### Dashboard & Discovery (DASH)
 - [ ] **DASH-01**: User can search and filter videos via Obsidian Bases search
@@ -65,9 +65,9 @@
 
 ## Traceability
 
-| Phase | Requirements |
-|-------|--------------|
-| 1 | TMPL-01, TMPL-02 |
+| Phase | Requirements | Status |
+|-------|--------------|--------|
+| 1 | TMPL-01, TMPL-02, TMPL-03 | ✅ Complete |
 | 2 | DASH-01, DASH-02, DASH-03, DASH-04 |
 | 3 | CHAN-01, CHAN-02, CHAN-03, CHAN-04 |
 | 4 | TOPIC-01, TOPIC-02, TOPIC-03, TOPIC-04 |
