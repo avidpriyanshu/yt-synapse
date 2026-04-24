@@ -513,7 +513,53 @@ function startWatcher() {
 }
 
 if (require.main === module) {
-  startWatcher();
+  const args = process.argv.slice(2);
+
+  // Handle topic merge command
+  if (args[0] === '--merge-topic-pair' && args[1] && args[2]) {
+    const TopicMerger = require('./topic-merger.js');
+    const merger = new TopicMerger(getVaultRoot());
+    console.log(`Merging topic "${args[1]}" into "${args[2]}"...`);
+    const result = merger.mergeTopic(args[1], args[2]);
+    if (result.success) {
+      console.log(`✓ Success: ${result.mergedCount} videos updated`);
+      process.exit(0);
+    } else {
+      console.error(`✗ Error: ${result.error}`);
+      process.exit(1);
+    }
+  }
+
+  // Handle topic listing
+  else if (args[0] === '--list-topics') {
+    const TopicMerger = require('./topic-merger.js');
+    const merger = new TopicMerger(getVaultRoot());
+    const topics = merger.getAllTopics();
+    console.log('Topics in vault:');
+    topics.forEach(t => console.log(`  ${t}`));
+    process.exit(0);
+  }
+
+  // Handle duplicate detection
+  else if (args[0] === '--find-duplicate-topics') {
+    const TopicMerger = require('./topic-merger.js');
+    const merger = new TopicMerger(getVaultRoot());
+    const dupes = merger.findDuplicates();
+    console.log('Potential duplicate topics:');
+    if (dupes.length === 0) {
+      console.log('  (none found)');
+    } else {
+      dupes.forEach(([t1, t2]) => {
+        console.log(`  "${t1}" vs "${t2}"`);
+      });
+    }
+    process.exit(0);
+  }
+
+  // Default: start watcher
+  else {
+    startWatcher();
+  }
 }
 
 module.exports = {
