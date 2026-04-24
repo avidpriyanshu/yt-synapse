@@ -9,6 +9,7 @@
 const matter = require('gray-matter');
 const fs = require('fs');
 const path = require('path');
+const logger = require('./logger.js');
 
 const INVALID_FILENAME_CHARS = /[<>:"|?*\\/\u0000-\u001f]/g;
 

@@ -3,6 +3,7 @@
 const Parser = require('rss-parser');
 
 const ReviewAgent = require('./reviewer.js');
+const logger = require('./logger.js');
 
 const BROWSER_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
@@ -45,17 +46,22 @@ function extractChannelIdFromHtml(html) {
 
 async function fetchWatchPageHtml(videoId) {
   const url = `${YT_HOST}/watch?v=${encodeURIComponent(videoId)}`;
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': BROWSER_UA,
-      Accept:
-        'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.9',
-    },
-    redirect: 'follow',
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.text();
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': BROWSER_UA,
+        Accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      redirect: 'follow',
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.text();
+  } catch (err) {
+    logger.log('WARN', 'EXTRACT', 'Failed to fetch watch page', `${videoId}: ${err.message}`);
+    throw err;
+  }
 }
 
 /**
@@ -64,8 +70,13 @@ async function fetchWatchPageHtml(videoId) {
 async function resolveChannelIdFromVideo(videoId) {
   try {
     const html = await fetchWatchPageHtml(videoId);
-    return extractChannelIdFromHtml(html);
-  } catch {
+    const channelId = extractChannelIdFromHtml(html);
+    if (!channelId) {
+      logger.log('WARN', 'RESOLVE', 'Could not extract channel ID from page', videoId);
+    }
+    return channelId;
+  } catch (err) {
+    logger.log('ERROR', 'RESOLVE', 'Network timeout fetching channel page', `${videoId}: ${err.message}`);
     return null;
   }
 }
@@ -114,7 +125,8 @@ async function fetchVideoMetadata(videoId) {
       duration: extractDurationFromHtml(html),
       viewCount: extractViewCountFromHtml(html),
     };
-  } catch {
+  } catch (err) {
+    logger.log('WARN', 'EXTRACT', 'Failed to fetch metadata', `${videoId}: ${err.message}`);
     // Graceful degradation: return nulls on any error
     return { duration: null, viewCount: null };
   }
@@ -130,7 +142,13 @@ function rssUrlForChannel(channelId) {
  */
 async function fetchChannelFeedVideoItems(channelId) {
   const url = rssUrlForChannel(channelId);
-  const feed = await parser.parseURL(url);
+  let feed;
+  try {
+    feed = await parser.parseURL(url);
+  } catch (err) {
+    logger.log('ERROR', 'EXTRACT', 'Failed to fetch RSS feed', `${channelId}: ${err.message}`);
+    throw err;
+  }
   const feedTitle = (feed.title || '').trim() || 'YouTube Channel';
   const items = [];
 
