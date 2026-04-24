@@ -52,7 +52,7 @@ function updateTime() {
 
 async function checkStatus() {
   try {
-    const res = await fetch(\`\${SERVICE_API}/status\`);
+    const res = await fetch(`${SERVICE_API}/status`);
     const data = await res.json();
     
     if (data.running) {
@@ -71,7 +71,7 @@ async function checkStatus() {
 
 async function startScraper() {
   try {
-    const res = await fetch(\`\${SERVICE_API}/start\`, { method: 'POST' });
+    const res = await fetch(`${SERVICE_API}/start`, { method: 'POST' });
     const data = await res.json();
     
     if (data.status === 'started' || data.status === 'already-running') {
@@ -87,7 +87,7 @@ async function startScraper() {
 
 async function stopScraper() {
   try {
-    const res = await fetch(\`\${SERVICE_API}/stop\`, { method: 'POST' });
+    const res = await fetch(`${SERVICE_API}/stop`, { method: 'POST' });
     const data = await res.json();
     
     if (data.status === 'stopped') {
@@ -103,7 +103,7 @@ async function stopScraper() {
 
 async function viewLogs() {
   try {
-    const res = await fetch(\`\${SERVICE_API}/logs\`);
+    const res = await fetch(`${SERVICE_API}/logs`);
     const data = await res.json();
     
     logsContainer.style.display = logsContainer.style.display === 'none' ? 'block' : 'none';

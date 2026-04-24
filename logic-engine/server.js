@@ -3,7 +3,10 @@
 const http = require('http');
 const { execFile } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 const logger = require('./logger.js');
+
+const CONFIG_PATH = path.join(__dirname, 'config.json');
 
 let runningProcess = null;
 let runningProcessPid = null;
@@ -73,9 +76,56 @@ function getLogsContent() {
 }
 
 /**
+ * Read config.json
+ */
+function readConfig() {
+  try {
+    return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+  } catch (err) {
+    logger.log('ERROR', 'CONFIG', 'Failed to read config', err.message);
+    return { autoStartScraper: false, loggingLevel: 'INFO' };
+  }
+}
+
+/**
+ * Write config.json
+ */
+function writeConfig(updates) {
+  try {
+    const config = readConfig();
+    Object.assign(config, updates);
+    fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
+    logger.log('INFO', 'CONFIG', 'Config updated', JSON.stringify(updates));
+    return { ok: true };
+  } catch (err) {
+    logger.log('ERROR', 'CONFIG', 'Failed to write config', err.message);
+    return { ok: false, error: err.message };
+  }
+}
+
+/**
+ * Parse JSON body from request
+ */
+function parseJsonBody(req) {
+  return new Promise((resolve) => {
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(body));
+      } catch {
+        resolve({});
+      }
+    });
+  });
+}
+
+/**
  * HTTP Request handler
  */
-function handleRequest(req, res) {
+async function handleRequest(req, res) {
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -106,6 +156,15 @@ function handleRequest(req, res) {
     const logs = getLogsContent();
     res.writeHead(200);
     res.end(JSON.stringify({ content: logs }));
+  } else if (pathname === '/config' && req.method === 'GET') {
+    const config = readConfig();
+    res.writeHead(200);
+    res.end(JSON.stringify(config));
+  } else if (pathname === '/config' && req.method === 'POST') {
+    const body = await parseJsonBody(req);
+    const result = writeConfig(body);
+    res.writeHead(result.ok ? 200 : 400);
+    res.end(JSON.stringify(result));
   } else if (pathname === '/health' && req.method === 'GET') {
     res.writeHead(200);
     res.end(JSON.stringify({ status: 'ok' }));

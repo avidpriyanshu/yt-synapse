@@ -86,47 +86,47 @@ try {
 When the scraper runs, how much information should it show you?
 
 ```dataviewjs
-dv.container.innerHTML = `
-<div style="padding: 1em; background-color: var(--background-secondary); border-radius: 0.5em; margin-bottom: 1em;">
-  <div style="margin-bottom: 1.5em;">
-    <label style="display: flex; align-items: flex-start; margin-bottom: 1em; cursor: pointer;">
-      <input type="radio" name="log-preference" value="summary" style="margin-right: 0.5em; margin-top: 0.15em; cursor: pointer;">
-      <div>
-        <strong>Summary</strong> (Recommended)
-        <p style="font-size: 0.9em; color: var(--text-muted); margin: 0.25em 0 0 0;">
-          Shows overall progress — how many videos were added, if any errors happened, that's it.
-        </p>
-      </div>
-    </label>
-    <label style="display: flex; align-items: flex-start; cursor: pointer;">
-      <input type="radio" name="log-preference" value="detailed" style="margin-right: 0.5em; margin-top: 0.15em; cursor: pointer;">
-      <div>
-        <strong>Detailed</strong>
-        <p style="font-size: 0.9em; color: var(--text-muted); margin: 0.25em 0 0 0;">
-          Shows every action — each video added, topics extracted, channels processed. Useful for understanding what's happening.
-        </p>
-      </div>
-    </label>
+(async () => {
+  dv.container.innerHTML = `
+  <div style="padding: 1em; background-color: var(--background-secondary); border-radius: 0.5em; margin-bottom: 1em;">
+    <div style="margin-bottom: 1.5em;">
+      <label style="display: flex; align-items: flex-start; margin-bottom: 1em; cursor: pointer;">
+        <input type="radio" name="log-preference" value="INFO" style="margin-right: 0.5em; margin-top: 0.15em; cursor: pointer;">
+        <div>
+          <strong>Summary</strong> (Recommended)
+          <p style="font-size: 0.9em; color: var(--text-muted); margin: 0.25em 0 0 0;">
+            Shows overall progress — how many videos were added, if any errors happened, that's it.
+          </p>
+        </div>
+      </label>
+      <label style="display: flex; align-items: flex-start; cursor: pointer;">
+        <input type="radio" name="log-preference" value="VERBOSE" style="margin-right: 0.5em; margin-top: 0.15em; cursor: pointer;">
+        <div>
+          <strong>Detailed</strong>
+          <p style="font-size: 0.9em; color: var(--text-muted); margin: 0.25em 0 0 0;">
+            Shows every action — each video added, topics extracted, channels processed. Useful for understanding what's happening.
+          </p>
+        </div>
+      </label>
+    </div>
   </div>
-</div>
-`;
+  `;
 
-const logRadios = document.querySelectorAll('input[name="log-preference"]');
-logRadios.forEach(radio => {
-  radio.addEventListener('change', () => {
-    localStorage.setItem('yt-vault-setup-logging', radio.value);
-  });
-});
-
-// Load saved preference, default to summary
-try {
-  const saved = localStorage.getItem('yt-vault-setup-logging') || 'summary';
-  const radio = Array.from(logRadios).find(r => r.value === saved);
-  if (radio) radio.checked = true;
-} catch (e) {
-  const summaryRadio = Array.from(logRadios).find(r => r.value === 'summary');
-  if (summaryRadio) summaryRadio.checked = true;
-}
+  const logRadios = document.querySelectorAll('input[name="log-preference"]');
+  
+  try {
+    const res = await fetch('http://localhost:3000/config');
+    if (res.ok) {
+      const config = await res.json();
+      const level = config.loggingLevel || 'INFO';
+      const radio = Array.from(logRadios).find(r => r.value === level);
+      if (radio) radio.checked = true;
+    }
+  } catch (e) {
+    const summaryRadio = Array.from(logRadios).find(r => r.value === 'INFO');
+    if (summaryRadio) summaryRadio.checked = true;
+  }
+})();
 ```
 
 ---
@@ -136,47 +136,47 @@ try {
 Would you like the scraper to automatically start checking for new videos when you open your vault?
 
 ```dataviewjs
-dv.container.innerHTML = `
-<div style="padding: 1em; background-color: var(--background-secondary); border-radius: 0.5em; margin-bottom: 1em;">
-  <div style="margin-bottom: 1.5em;">
-    <label style="display: flex; align-items: flex-start; margin-bottom: 1em; cursor: pointer;">
-      <input type="radio" name="auto-start-pref" value="yes" style="margin-right: 0.5em; margin-top: 0.15em; cursor: pointer;">
-      <div>
-        <strong>Yes, start automatically</strong> (Recommended)
-        <p style="font-size: 0.9em; color: var(--text-muted); margin: 0.25em 0 0 0;">
-          The scraper begins checking for new videos as soon as you open your vault. Most convenient.
-        </p>
-      </div>
-    </label>
-    <label style="display: flex; align-items: flex-start; cursor: pointer;">
-      <input type="radio" name="auto-start-pref" value="no" style="margin-right: 0.5em; margin-top: 0.15em; cursor: pointer;">
-      <div>
-        <strong>No, I'll start it manually</strong>
-        <p style="font-size: 0.9em; color: var(--text-muted); margin: 0.25em 0 0 0;">
-          You control when scraping happens using the Start button on the Service Controls page.
-        </p>
-      </div>
-    </label>
+(async () => {
+  dv.container.innerHTML = `
+  <div style="padding: 1em; background-color: var(--background-secondary); border-radius: 0.5em; margin-bottom: 1em;">
+    <div style="margin-bottom: 1.5em;">
+      <label style="display: flex; align-items: flex-start; margin-bottom: 1em; cursor: pointer;">
+        <input type="radio" name="auto-start-pref" value="yes" style="margin-right: 0.5em; margin-top: 0.15em; cursor: pointer;">
+        <div>
+          <strong>Yes, start automatically</strong> (Recommended)
+          <p style="font-size: 0.9em; color: var(--text-muted); margin: 0.25em 0 0 0;">
+            The scraper begins checking for new videos as soon as you open your vault. Most convenient.
+          </p>
+        </div>
+      </label>
+      <label style="display: flex; align-items: flex-start; cursor: pointer;">
+        <input type="radio" name="auto-start-pref" value="no" style="margin-right: 0.5em; margin-top: 0.15em; cursor: pointer;">
+        <div>
+          <strong>No, I'll start it manually</strong>
+          <p style="font-size: 0.9em; color: var(--text-muted); margin: 0.25em 0 0 0;">
+            You control when scraping happens using the Start button on the Service Controls page.
+          </p>
+        </div>
+      </label>
+    </div>
   </div>
-</div>
-`;
+  `;
 
-const autoStartRadios = document.querySelectorAll('input[name="auto-start-pref"]');
-autoStartRadios.forEach(radio => {
-  radio.addEventListener('change', () => {
-    localStorage.setItem('yt-vault-setup-autostart', radio.value === 'yes');
-  });
-});
-
-// Load saved preference, default to yes
-try {
-  const saved = localStorage.getItem('yt-vault-setup-autostart') !== 'false';
-  const radio = Array.from(autoStartRadios).find(r => r.value === (saved ? 'yes' : 'no'));
-  if (radio) radio.checked = true;
-} catch (e) {
-  const yesRadio = Array.from(autoStartRadios).find(r => r.value === 'yes');
-  if (yesRadio) yesRadio.checked = true;
-}
+  const autoStartRadios = document.querySelectorAll('input[name="auto-start-pref"]');
+  
+  try {
+    const res = await fetch('http://localhost:3000/config');
+    if (res.ok) {
+      const config = await res.json();
+      const saved = config.autoStartScraper !== false;
+      const radio = Array.from(autoStartRadios).find(r => r.value === (saved ? 'yes' : 'no'));
+      if (radio) radio.checked = true;
+    }
+  } catch (e) {
+    const yesRadio = Array.from(autoStartRadios).find(r => r.value === 'yes');
+    if (yesRadio) yesRadio.checked = true;
+  }
+})();
 ```
 
 ---
@@ -185,10 +185,73 @@ try {
 
 Your YouTube Vault is now configured and ready to use.
 
+```dataviewjs
+(async () => {
+  dv.container.innerHTML = `
+  <div style="padding: 1em; background-color: var(--background-secondary); border-radius: 0.5em; margin-bottom: 1em;">
+    <button id="complete-setup-btn" style="padding: 0.8em 1.5em; background-color: var(--interactive-accent); color: white; border: none; border-radius: 0.3em; cursor: pointer; font-size: 1em; font-weight: bold;">
+      Complete Setup
+    </button>
+    <div id="setup-status" style="margin-top: 1em; font-size: 0.95em;"></div>
+  </div>
+  `;
+
+  const btn = document.getElementById('complete-setup-btn');
+  const statusDiv = document.getElementById('setup-status');
+
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    statusDiv.textContent = 'Saving settings...';
+
+    try {
+      const logLevel = document.querySelector('input[name="log-preference"]:checked')?.value || 'INFO';
+      const autoStart = document.querySelector('input[name="auto-start-pref"]:checked')?.value === 'yes';
+
+      // Save logging level
+      let res = await fetch('http://localhost:3000/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ loggingLevel: logLevel })
+      });
+      if (!res.ok) throw new Error('Failed to save logging level');
+
+      // Save autostart setting
+      res = await fetch('http://localhost:3000/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ autoStartScraper: autoStart })
+      });
+      if (!res.ok) throw new Error('Failed to save autostart setting');
+
+      // If autostart is enabled, start scraper now
+      if (autoStart) {
+        res = await fetch('http://localhost:3000/start', { method: 'POST' });
+        if (res.ok) {
+          statusDiv.innerHTML = '✓ <strong>Setup complete!</strong> Your scraper is now running. Go to <strong>Service Controls</strong> to manage it.';
+          statusDiv.style.color = 'var(--text-success)';
+        } else {
+          statusDiv.innerHTML = '✓ <strong>Setup complete!</strong> Go to <strong>Service Controls</strong> to start scraping.';
+          statusDiv.style.color = 'var(--text-success)';
+        }
+      } else {
+        statusDiv.innerHTML = '✓ <strong>Setup complete!</strong> Go to <strong>Service Controls</strong> when you\'re ready to start scraping.';
+        statusDiv.style.color = 'var(--text-success)';
+      }
+
+      btn.style.display = 'none';
+    } catch (err) {
+      statusDiv.textContent = '✗ Error: ' + err.message;
+      statusDiv.style.color = 'var(--text-error)';
+      btn.disabled = false;
+    }
+  });
+})();
+```
+
 ### Next Steps
 
-1. **Go to Service Controls** — Click the button below to see controls for starting and stopping your scraper
-2. **Add your first channel** — Go to Service Controls and click "Start Scraping" to begin collecting videos
+1. **Click "Complete Setup"** above to apply your preferences
+2. **Go to Service Controls** — See controls for starting and stopping your scraper
 3. **Watch videos appear** — Your vault will automatically populate with video notes, topics, and channel pages
 4. **Adjust settings anytime** — Come back to the Settings page to change your preferences
 

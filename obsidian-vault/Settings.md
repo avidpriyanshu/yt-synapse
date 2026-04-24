@@ -17,34 +17,56 @@ When you open your vault, should the scraper automatically begin collecting new 
 - **Disabled:** You control when scraping begins via the Start button
 
 ```dataviewjs
-dv.container.innerHTML = `
-<div style="padding: 1em; background-color: var(--background-secondary); border-radius: 0.5em; margin-bottom: 1em;">
-  <label style="display: flex; align-items: center; cursor: pointer;">
-    <input type="checkbox" id="auto-start-toggle" style="margin-right: 0.5em; width: 1.2em; height: 1.2em; cursor: pointer;">
-    <span>Enable auto-start when vault opens</span>
-  </label>
-  <p style="font-size: 0.9em; color: var(--text-muted); margin-top: 0.5em;">
-    If disabled, you can manually start scraping from the Service Controls page.
-  </p>
-</div>
-`;
+(async () => {
+  dv.container.innerHTML = `
+  <div style="padding: 1em; background-color: var(--background-secondary); border-radius: 0.5em; margin-bottom: 1em;">
+    <label style="display: flex; align-items: center; cursor: pointer;">
+      <input type="checkbox" id="auto-start-toggle" style="margin-right: 0.5em; width: 1.2em; height: 1.2em; cursor: pointer;">
+      <span>Enable auto-start when vault opens</span>
+    </label>
+    <p style="font-size: 0.9em; color: var(--text-muted); margin-top: 0.5em;">
+      If disabled, you can manually start scraping from the Service Controls page.
+    </p>
+    <div id="status-msg" style="margin-top: 0.5em; font-size: 0.85em;"></div>
+  </div>
+  `;
 
-const toggle = document.getElementById('auto-start-toggle');
-if (toggle) {
-  // Load saved preference
-  try {
-    const settings = JSON.parse(localStorage.getItem('yt-vault-settings') || '{}');
-    toggle.checked = settings.autoStartEnabled !== false;
-  } catch (e) {
-    toggle.checked = false;
+  const toggle = document.getElementById('auto-start-toggle');
+  const statusMsg = document.getElementById('status-msg');
+  
+  async function loadSettings() {
+    try {
+      const res = await fetch('http://localhost:3000/config');
+      if (!res.ok) throw new Error('Service error');
+      const config = await res.json();
+      toggle.checked = config.autoStartScraper || false;
+      statusMsg.textContent = '';
+    } catch (err) {
+      statusMsg.textContent = '⚠️ Service not running — start it from Service Controls first';
+      statusMsg.style.color = 'var(--text-error)';
+    }
   }
 
-  toggle.addEventListener('change', () => {
-    const settings = JSON.parse(localStorage.getItem('yt-vault-settings') || '{}');
-    settings.autoStartEnabled = toggle.checked;
-    localStorage.setItem('yt-vault-settings', JSON.stringify(settings));
-  });
-}
+  async function saveSettings() {
+    try {
+      const res = await fetch('http://localhost:3000/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ autoStartScraper: toggle.checked })
+      });
+      if (!res.ok) throw new Error('Save failed');
+      statusMsg.textContent = '✓ Saved';
+      statusMsg.style.color = 'var(--text-success)';
+      setTimeout(() => { statusMsg.textContent = ''; }, 2000);
+    } catch (err) {
+      statusMsg.textContent = '✗ Failed to save';
+      statusMsg.style.color = 'var(--text-error)';
+    }
+  }
+
+  await loadSettings();
+  toggle.addEventListener('change', saveSettings);
+})();
 ```
 
 ---
@@ -59,49 +81,70 @@ Choose how much detail you want to see when the scraper is running.
 - **Detailed:** See every action (video added, topic extracted, channels processed)
 
 ```dataviewjs
-dv.container.innerHTML = `
-<div style="padding: 1em; background-color: var(--background-secondary); border-radius: 0.5em; margin-bottom: 1em;">
-  <div style="margin-bottom: 1em;">
-    <label style="display: flex; align-items: center; margin-bottom: 0.5em; cursor: pointer;">
-      <input type="radio" name="log-level" value="summary" style="margin-right: 0.5em; cursor: pointer;">
-      <span><strong>Summary</strong> — Show overall progress and errors only</span>
-    </label>
-    <label style="display: flex; align-items: center; cursor: pointer;">
-      <input type="radio" name="log-level" value="detailed" style="margin-right: 0.5em; cursor: pointer;">
-      <span><strong>Detailed</strong> — Show every action the scraper takes</span>
-    </label>
+(async () => {
+  dv.container.innerHTML = `
+  <div style="padding: 1em; background-color: var(--background-secondary); border-radius: 0.5em; margin-bottom: 1em;">
+    <div style="margin-bottom: 1em;">
+      <label style="display: flex; align-items: center; margin-bottom: 0.5em; cursor: pointer;">
+        <input type="radio" name="log-level" value="INFO" style="margin-right: 0.5em; cursor: pointer;">
+        <span><strong>Summary</strong> — Show overall progress and errors only</span>
+      </label>
+      <label style="display: flex; align-items: center; cursor: pointer;">
+        <input type="radio" name="log-level" value="VERBOSE" style="margin-right: 0.5em; cursor: pointer;">
+        <span><strong>Detailed</strong> — Show every action the scraper takes</span>
+      </label>
+    </div>
+    <p style="font-size: 0.9em; color: var(--text-muted); margin-top: 0.5em;">
+      Detailed logging uses more disk space but helps understand what's happening.
+    </p>
+    <div id="log-status-msg" style="margin-top: 0.5em; font-size: 0.85em;"></div>
   </div>
-  <p style="font-size: 0.9em; color: var(--text-muted); margin-top: 0.5em;">
-    Detailed logging uses more disk space but helps understand what's happening.
-  </p>
-</div>
-`;
+  `;
 
-const radioButtons = document.querySelectorAll('input[name="log-level"]');
-radioButtons.forEach(btn => {
-  // Load saved preference
-  try {
-    const settings = JSON.parse(localStorage.getItem('yt-vault-settings') || '{}');
-    if (settings.logLevel === btn.value) {
-      btn.checked = true;
-    }
-  } catch (e) {}
+  const radioButtons = document.querySelectorAll('input[name="log-level"]');
+  const statusMsg = document.getElementById('log-status-msg');
 
-  btn.addEventListener('change', (e) => {
-    if (e.target.checked) {
-      const settings = JSON.parse(localStorage.getItem('yt-vault-settings') || '{}');
-      settings.logLevel = e.target.value;
-      localStorage.setItem('yt-vault-settings', JSON.stringify(settings));
+  async function loadLoggingLevel() {
+    try {
+      const res = await fetch('http://localhost:3000/config');
+      if (!res.ok) throw new Error('Service error');
+      const config = await res.json();
+      const level = config.loggingLevel || 'INFO';
+      const btn = document.querySelector(`input[name="log-level"][value="${level}"]`);
+      if (btn) btn.checked = true;
+    } catch (err) {
+      const summary = document.querySelector('input[name="log-level"][value="INFO"]');
+      if (summary) summary.checked = true;
     }
+  }
+
+  async function saveLoggingLevel(level) {
+    try {
+      const res = await fetch('http://localhost:3000/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ loggingLevel: level })
+      });
+      if (!res.ok) throw new Error('Save failed');
+      statusMsg.textContent = '✓ Saved';
+      statusMsg.style.color = 'var(--text-success)';
+      setTimeout(() => { statusMsg.textContent = ''; }, 2000);
+    } catch (err) {
+      statusMsg.textContent = '✗ Failed to save';
+      statusMsg.style.color = 'var(--text-error)';
+    }
+  }
+
+  await loadLoggingLevel();
+  
+  radioButtons.forEach(btn => {
+    btn.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        saveLoggingLevel(e.target.value);
+      }
+    });
   });
-});
-
-// Set default if none selected
-const checked = document.querySelector('input[name="log-level"]:checked');
-if (!checked) {
-  const summary = document.querySelector('input[name="log-level"][value="summary"]');
-  if (summary) summary.checked = true;
-}
+})();
 ```
 
 ---
@@ -168,7 +211,7 @@ Every log message should be written in plain English. If you see technical jargo
 
 ### Settings aren't being saved
 
-The app uses your browser's local storage to remember your preferences. If you're using a private/incognito window, settings may not persist.
+Make sure the service is running (start it from the Service Controls page). Your settings are saved to the backend config, so if the service isn't running, changes can't be persisted.
 
 ---
 

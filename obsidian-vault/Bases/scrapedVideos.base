@@ -3,7 +3,7 @@ filters:
     - file.tags.contains("youtube/video")
 views:
   - type: table
-    name: "All Videos"
+    name: All Videos
     order:
       - file.name
       - channel
@@ -11,6 +11,6 @@ views:
       - topics
     sort:
       - property: date
-        direction: DESC
+        direction: ASC
       - property: channel
         direction: ASC
