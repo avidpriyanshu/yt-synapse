@@ -4,23 +4,24 @@ const Parser = require('rss-parser');
 
 const ReviewAgent = require('./utils/reviewer.js');
 const logger = require('./utils/logger.js');
-
-const BROWSER_UA =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+const { pickUA, recordRequest } = require('./utils/user-agents.js');
+const { requestDelay } = require('./utils/delays.js');
 
 const YT_HOST = 'https://www.youtube.com';
 
-const parser = new Parser({
-  customFields: {
-    item: [
-      ['yt:videoId', 'ytVideoId'],
-      ['yt:channelId', 'ytChannelId'],
-    ],
-  },
-  requestOptions: {
-    headers: { 'User-Agent': BROWSER_UA },
-  },
-});
+function makeParser() {
+  return new Parser({
+    customFields: {
+      item: [
+        ['yt:videoId', 'ytVideoId'],
+        ['yt:channelId', 'ytChannelId'],
+      ],
+    },
+    requestOptions: {
+      headers: { 'User-Agent': pickUA() },
+    },
+  });
+}
 
 /**
  * Try three different patterns for channelId in YouTube watch page HTML.
@@ -49,13 +50,14 @@ async function fetchWatchPageHtml(videoId) {
   try {
     const res = await fetch(url, {
       headers: {
-        'User-Agent': BROWSER_UA,
+        'User-Agent': pickUA(),
         Accept:
           'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
       },
       redirect: 'follow',
     });
+    recordRequest(res.status);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.text();
   } catch (err) {
@@ -144,7 +146,7 @@ async function fetchChannelFeedVideoItems(channelId) {
   const url = rssUrlForChannel(channelId);
   let feed;
   try {
-    feed = await parser.parseURL(url);
+    feed = await makeParser().parseURL(url);
   } catch (err) {
     logger.log('ERROR', 'EXTRACT', 'Failed to fetch RSS feed', `${channelId}: ${err.message}`);
     throw err;
@@ -187,6 +189,7 @@ async function fetchChannelFeedVideoItems(channelId) {
         const metadata = await fetchVideoMetadata(videoId);
         item.duration = metadata.duration;
         item.viewCount = metadata.viewCount;
+        await requestDelay();
       } catch {
         // Graceful degradation: keep nulls on error
       }
@@ -207,5 +210,4 @@ module.exports = {
   extractDurationFromHtml,
   extractViewCountFromHtml,
   fetchVideoMetadata,
-  BROWSER_UA,
 };

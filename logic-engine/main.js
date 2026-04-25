@@ -9,6 +9,7 @@ const engine = require('./engine.js');
 const processor = require('./processing/processor.js');
 const logger = require('./utils/logger.js');
 const errorMessages = require('./utils/error-messages.js');
+const { getMetrics } = require('./utils/user-agents.js');
 
 const CONFIG_PATH = path.join(__dirname, 'config', 'config.json');
 
@@ -457,6 +458,10 @@ async function processClipping(absPath) {
   }
 
   logger.log('INFO', 'sync', `videos_added=${videosAdded} topics_created=${topicsCreated} channel=${channelId}`);
+
+  const metrics = getMetrics();
+  logger.log('INFO', 'metrics', `requests=${metrics.total} success=${metrics.success} rate429=${metrics.rate429} rate403=${metrics.rate403} success_rate=${metrics.successRate}`);
+
   logPhase(
     phase,
     'done',

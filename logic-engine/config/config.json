@@ -5,5 +5,9 @@
   "loggingLevel": "INFO",
   "_loggingLevel_help": "Levels: INFO (standard), WARN (non-blocking), ERROR (failures)",
   "videoBatchSize": 15,
-  "_videoBatchSize_help": "Max videos to process per channel (1-50)"
+  "_videoBatchSize_help": "Max videos to process per channel (1-50)",
+  "requestDelayMinMs": 1500,
+  "_requestDelayMinMs_help": "Minimum delay between YouTube requests (ms)",
+  "requestDelayMaxMs": 4000,
+  "_requestDelayMaxMs_help": "Maximum delay between YouTube requests (ms) — random value chosen per request"
 }
